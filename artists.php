@@ -1,232 +1,524 @@
 <?php
 
 include 'db_connect.php';
+include 'validation.php';
 
-if (isset($_POST['submit'])) {
 
-    $name = $_POST['name'];
-    $phone = $_POST['phone'];
-    $email = $_POST['email'];
-    $password = $_POST['password'];
-    $address = $_POST['address'];
-    $specialization = $_POST['specialization'];
+if(isset($_POST['submit'])){
+
+
+    $name = trim($_POST['name']);
+    $phone = trim($_POST['phone']);
+    $email = trim($_POST['email']);
+    $password = trim($_POST['password']);
+    $address = trim($_POST['address']);
+    $specialization = trim($_POST['specialization']);
     $experience_years = $_POST['experience_years'];
+    $joining_date = $_POST['joining_date'];
+    $status = $_POST['status'];
 
-    $sql = "INSERT INTO artists (Name, Phone, Email, User_Password, Address, Specialization, Experience_Years)
-            VALUES ('$name', '$phone', '$email', '$password', '$address', '$specialization', '$experience_years')";
 
-    if (mysqli_query($conn, $sql)) {
-        echo "<script>alert('Artist registered successfully');</script>";
-    } else {
-        echo "Error: " . mysqli_error($conn);
+
+    if(!validateName($name)){
+
+        echo "<script>alert('Invalid name. Use only letters and minimum 3 characters.');</script>";
+
     }
+
+    elseif(!validatePhone($phone)){
+
+        echo "<script>alert('Phone number must be exactly 11 digits.');</script>";
+
+    }
+
+    elseif(!validateEmail($email)){
+
+        echo "<script>alert('Enter a valid email address.');</script>";
+
+    }
+
+    elseif(!validatePassword($password)){
+
+        echo "<script>alert('Password must contain minimum 6 characters.');</script>";
+
+    }
+
+    elseif(!validateExperience($experience_years)){
+
+        echo "<script>alert('Experience cannot be negative.');</script>";
+
+    }
+
+    elseif($joining_date > date('Y-m-d')){
+
+        echo "<script>alert('Joining date cannot be in the future.');</script>";
+
+    }
+
+    elseif(strlen($address) < 5){
+
+        echo "<script>alert('Address is too short.');</script>";
+
+    }
+
+    else{
+
+
+        $check = $conn->prepare(
+            "SELECT Artist_ID FROM artists WHERE Email=? OR Phone=?"
+        );
+
+
+        $check->bind_param(
+            "ss",
+            $email,
+            $phone
+        );
+
+
+        $check->execute();
+
+
+        $result = $check->get_result();
+
+
+
+        if($result->num_rows > 0){
+
+
+            echo "<script>alert('Email or phone number already exists.');</script>";
+
+        }
+
+        else{
+
+
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+
+
+            $stmt = $conn->prepare(
+
+                "INSERT INTO artists
+                (
+                Name,
+                Phone,
+                Email,
+                User_Password,
+                Address,
+                Specialization,
+                Experience_Years,
+                Joining_Date,
+                Status
+                )
+
+                VALUES(?,?,?,?,?,?,?,?,?)"
+
+            );
+
+
+
+            $stmt->bind_param(
+
+                "ssssssiss",
+
+                $name,
+                $phone,
+                $email,
+                $hashed_password,
+                $address,
+                $specialization,
+                $experience_years,
+                $joining_date,
+                $status
+
+            );
+
+
+
+            if($stmt->execute()){
+
+
+                echo "<script>
+
+                alert('Artist registered successfully');
+
+                window.location='view_artists.php';
+
+                </script>";
+
+            }
+
+            else{
+
+
+                echo "<script>
+
+                alert('Registration failed');
+
+                </script>";
+
+            }
+
+
+        }
+
+
+    }
+
+
 }
 
 ?>
 
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Artist Registration</title>
+<title>Artist Registration</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.tailwindcss.com"></script>
 
 </head>
 
+
 <body class="bg-orange-50 min-h-screen">
 
-    <nav class="bg-amber-800 shadow-lg">
 
-        <div class="max-w-7xl mx-auto px-6 py-4">
+<nav class="bg-amber-800 shadow-lg">
 
-            <div class="flex flex-wrap justify-center gap-6 text-white font-medium">
+<div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
 
-                <a href="index.html" class="hover:text-yellow-200">Home</a>
 
-                <a href="customers.php" class="hover:text-yellow-200">Customers</a>
+<h1 class="text-white text-2xl font-bold">
 
-                <a href="artists.php" class="hover:text-yellow-200">Artists</a>
+Henna Studio
 
-                <a href="view_artists.php" class="hover:text-yellow-200">View Artists</a>
+</h1>
 
-                <a href="designs.html" class="hover:text-yellow-200">Designs</a>
 
-                <a href="bookings.php" class="hover:text-yellow-200">Bookings</a>
+<a href="admin_login.php"
+class="text-white hover:text-yellow-200">
 
-                <a href="payments.html" class="hover:text-yellow-200">Payments</a>
+Admin Login
 
-                <a href="reviews.html" class="hover:text-yellow-200">Reviews</a>
+</a>
 
-            </div>
 
-        </div>
+</div>
 
-    </nav>
+</nav>
 
-    <div class="max-w-2xl mx-auto mt-10 bg-white shadow-xl rounded-2xl p-8">
 
-        <h1 class="text-4xl font-bold text-center text-amber-900 mb-6">
 
-            Artist Registration
+<div class="max-w-2xl mx-auto mt-10 bg-white shadow-xl rounded-2xl p-8">
 
-        </h1>
 
-        <hr class="mb-8">
+<h1 class="text-4xl font-bold text-center text-amber-900 mb-6">
 
-        <form method="POST" class="space-y-5">
+Artist Registration
 
-            <div>
+</h1>
 
-                <label class="block text-lg font-medium mb-2">
 
-                    Full Name:
 
-                </label>
+<form method="POST" class="space-y-5">
 
-                <input type="text"
-                    name="name"
-                    placeholder="Enter your name"
-                    required
-                    class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-amber-600">
 
-            </div>
 
-            <div>
+<div>
 
-                <label class="block text-lg font-medium mb-2">
+<label class="font-medium">
 
-                    Phone Number:
+Full Name
 
-                </label>
+</label>
 
-                <input type="text"
-                    name="phone"
-                    placeholder="Enter phone number"
-                    required
-                    class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-amber-600">
 
-            </div>
+<input
 
-            <div>
+type="text"
 
-                <label class="block text-lg font-medium mb-2">
+name="name"
 
-                    Email:
+pattern="[A-Za-z ]{3,}"
 
-                </label>
+title="Only letters and spaces allowed"
 
-                <input type="email"
-                    name="email"
-                    placeholder="Enter email"
-                    required
-                    class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-amber-600">
+required
 
-            </div>
+class="w-full border p-3 rounded-lg">
 
-            <div>
+</div>
 
-                <label class="block text-lg font-medium mb-2">
 
-                    Password:
 
-                </label>
 
-                <input type="password"
-                    name="password"
-                    placeholder="Enter password"
-                    required
-                    class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-amber-600">
+<div>
 
-            </div>
+<label class="font-medium">
 
-            <div>
+Phone Number
 
-                <label class="block text-lg font-medium mb-2">
+</label>
 
-                    Address:
 
-                </label>
+<input
 
-                <textarea
-                    name="address"
-                    rows="4"
-                    placeholder="Enter address"
-                    class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-amber-600"></textarea>
+type="text"
 
-            </div>
+name="phone"
 
-            <div>
+pattern="[0-9]{11}"
 
-                <label class="block text-lg font-medium mb-2">
+maxlength="11"
 
-                    Specialization:
+inputmode="numeric"
 
-                </label>
+required
 
-                <input type="text"
-                    name="specialization"
-                    placeholder="Arabic / Bridal / Modern"
-                    class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-amber-600">
+class="w-full border p-3 rounded-lg">
 
-            </div>
+</div>
 
-            <div>
 
-                <label class="block text-lg font-medium mb-2">
 
-                    Experience (Years):
 
-                </label>
+<div>
 
-                <input type="number"
-                    name="experience_years"
-                    placeholder="Enter experience"
-                    class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-amber-600">
+<label class="font-medium">
 
-            </div>
+Email
 
-            <div class="flex gap-4">
+</label>
 
-                <button type="submit"
-                    name="submit"
-                    class="bg-amber-700 text-white px-6 py-3 rounded-lg hover:bg-amber-900">
 
-                    Register
+<input
 
-                </button>
+type="email"
 
-                <button type="reset"
-                    class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-700">
+name="email"
 
-                    Clear
+required
 
-                </button>
+class="w-full border p-3 rounded-lg">
 
-            </div>
+</div>
 
-        </form>
 
-        <div class="mt-8">
 
-            <a href="index.html">
 
-                <button class="bg-amber-800 text-white px-6 py-3 rounded-lg hover:bg-amber-950">
+<div>
 
-                    Back to Home
+<label class="font-medium">
 
-                </button>
+Password
 
-            </a>
+</label>
 
-        </div>
 
-    </div>
+<input
+
+type="password"
+
+name="password"
+
+minlength="6"
+
+required
+
+class="w-full border p-3 rounded-lg">
+
+</div>
+
+
+
+
+<div>
+
+<label class="font-medium">
+
+Address
+
+</label>
+
+
+<textarea
+
+name="address"
+
+rows="3"
+
+minlength="5"
+
+required
+
+class="w-full border p-3 rounded-lg"></textarea>
+
+</div>
+
+
+
+
+<div>
+
+<label class="font-medium">
+
+Specialization
+
+</label>
+
+
+<select
+
+name="specialization"
+
+class="w-full border p-3 rounded-lg">
+
+
+<option value="Bridal">Bridal</option>
+
+<option value="Arabic">Arabic</option>
+
+<option value="Modern">Modern</option>
+
+<option value="Traditional">Traditional</option>
+
+
+</select>
+
+</div>
+
+
+
+
+<div>
+
+<label class="font-medium">
+
+Experience Years
+
+</label>
+
+
+<input
+
+type="number"
+
+name="experience_years"
+
+min="0"
+
+required
+
+class="w-full border p-3 rounded-lg">
+
+</div>
+
+
+
+
+<div>
+
+<label class="font-medium">
+
+Joining Date
+
+</label>
+
+
+<input
+
+type="date"
+
+name="joining_date"
+
+max="<?php echo date('Y-m-d'); ?>"
+
+required
+
+class="w-full border p-3 rounded-lg">
+
+</div>
+
+
+
+
+<div>
+
+<label class="font-medium">
+
+Status
+
+</label>
+
+
+<select
+
+name="status"
+
+class="w-full border p-3 rounded-lg">
+
+
+<option value="Active">Active</option>
+
+<option value="Inactive">Inactive</option>
+
+
+</select>
+
+</div>
+
+
+
+
+<div class="flex gap-4">
+
+
+<button
+
+type="submit"
+
+name="submit"
+
+class="bg-amber-700 text-white px-6 py-3 rounded-lg hover:bg-amber-900">
+
+
+Register
+
+
+</button>
+
+
+
+<button
+
+type="reset"
+
+class="bg-gray-500 text-white px-6 py-3 rounded-lg">
+
+
+Clear
+
+
+</button>
+
+
+</div>
+
+
+
+</form>
+
+
+</div>
+
 
 </body>
 

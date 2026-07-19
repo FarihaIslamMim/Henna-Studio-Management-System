@@ -2,197 +2,422 @@
 
 include 'db_connect.php';
 
-if (isset($_POST['submit'])) {
 
-    $booking_id = $_POST['booking_id'];
-    $amount = $_POST['amount'];
-    $payment_method = $_POST['payment_method'];
+if(isset($_POST['submit'])){
+
+
+    $booking_id = intval($_POST['booking_id']);
+
+    $amount = floatval($_POST['amount']);
+
+    $payment_method = trim($_POST['payment_method']);
+
     $payment_date = $_POST['payment_date'];
-    $payment_status = $_POST['payment_status'];
 
-    $sql = "INSERT INTO payments
-            (Booking_ID, Amount, Payment_Method, Payment_Date, Payment_Status)
+    $payment_status = trim($_POST['payment_status']);
 
-            VALUES
 
-            ('$booking_id', '$amount', '$payment_method', '$payment_date', '$payment_status')";
 
-    if (mysqli_query($conn, $sql)) {
+    $allowed_methods = [
+        "Cash",
+        "Bkash",
+        "Nagad"
+    ];
 
-        echo "<script>alert('Payment added successfully');</script>";
 
-    } else {
+    $allowed_status = [
+        "Paid",
+        "Unpaid"
+    ];
 
-        echo "Error: " . mysqli_error($conn);
+
+
+    if($booking_id <= 0){
+
+
+        echo "<script>alert('Invalid Booking ID');</script>";
 
     }
+
+
+    elseif($amount <= 0){
+
+
+        echo "<script>alert('Amount must be greater than 0');</script>";
+
+    }
+
+
+    elseif($amount > 99999999.99){
+
+
+        echo "<script>alert('Amount is too large');</script>";
+
+    }
+
+
+    elseif(!in_array($payment_method,$allowed_methods)){
+
+
+        echo "<script>alert('Invalid payment method');</script>";
+
+    }
+
+
+    elseif(!in_array($payment_status,$allowed_status)){
+
+
+        echo "<script>alert('Invalid payment status');</script>";
+
+    }
+
+
+    elseif($payment_date > date('Y-m-d')){
+
+
+        echo "<script>alert('Payment date cannot be in the future');</script>";
+
+    }
+
+
+    else{
+
+
+        // Check booking exists
+
+        $stmt = $conn->prepare(
+
+            "SELECT Booking_ID, Status 
+             FROM bookings 
+             WHERE Booking_ID=?"
+
+        );
+
+
+        $stmt->bind_param(
+            "i",
+            $booking_id
+        );
+
+
+        $stmt->execute();
+
+
+        $booking_result = $stmt->get_result();
+
+
+
+        if($booking_result->num_rows == 0){
+
+
+            echo "<script>alert('Booking does not exist');</script>";
+
+        }
+
+
+        else{
+
+
+            $booking = $booking_result->fetch_assoc();
+
+
+
+            if($booking['Status']=="CANCELLED"){
+
+
+                echo "<script>alert('Cannot add payment for cancelled booking');</script>";
+
+            }
+
+
+            else{
+
+
+                // Check duplicate payment
+
+
+                $check = $conn->prepare(
+
+                    "SELECT Payment_ID 
+                     FROM payments 
+                     WHERE Booking_ID=?"
+
+                );
+
+
+                $check->bind_param(
+                    "i",
+                    $booking_id
+                );
+
+
+                $check->execute();
+
+
+                $existing = $check->get_result();
+
+
+
+                if($existing->num_rows > 0){
+
+
+                    echo "<script>alert('Payment already exists for this booking');</script>";
+
+                }
+
+
+                else{
+
+
+                    $insert = $conn->prepare(
+
+                        "INSERT INTO payments
+
+                        (
+                        Booking_ID,
+                        Amount,
+                        Payment_Method,
+                        Payment_Date,
+                        Payment_Status
+                        )
+
+                        VALUES(?,?,?,?,?)"
+
+                    );
+
+
+                    $insert->bind_param(
+
+                        "idsss",
+
+                        $booking_id,
+                        $amount,
+                        $payment_method,
+                        $payment_date,
+                        $payment_status
+
+                    );
+
+
+
+                    if($insert->execute()){
+
+
+                        echo "<script>
+
+                        alert('Payment added successfully');
+
+                        window.location='view_payments.php';
+
+                        </script>";
+
+                    }
+
+
+                    else{
+
+
+                        echo "<script>
+
+                        alert('Payment failed');
+
+                        </script>";
+
+                    }
+
+
+                }
+
+
+            }
+
+
+        }
+
+
+    }
+
+
 }
 
 ?>
-
 <!DOCTYPE html>
 
 <html lang="en">
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Payments</title>
+<title>Payment Form</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.tailwindcss.com"></script>
 
 </head>
 
+
 <body class="bg-orange-50 min-h-screen">
 
-    <nav class="bg-amber-800 shadow-lg">
 
-        <div class="max-w-7xl mx-auto px-6 py-4">
+<nav class="bg-amber-800 shadow-lg">
 
-            <div class="flex flex-wrap justify-center gap-6 text-white font-medium">
+<div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
 
-                <a href="index.html" class="hover:text-yellow-200">Home</a>
+<h1 class="text-white text-2xl font-bold">
+Henna Studio
+</h1>
 
-                <a href="customers.php" class="hover:text-yellow-200">Customers</a>
+<a href="admin_login.php" class="text-white hover:text-yellow-200">
+Admin
+</a>
 
-                <a href="artists.php" class="hover:text-yellow-200">Artists</a>
+</div>
 
-                <a href="designs.html" class="hover:text-yellow-200">Designs</a>
+</nav>
 
-                <a href="bookings.php" class="hover:text-yellow-200">Bookings</a>
 
-                <a href="payments.php" class="hover:text-yellow-200">Payments</a>
 
-                <a href="reviews.html" class="hover:text-yellow-200">Reviews</a>
+<div class="max-w-2xl mx-auto mt-10 bg-white shadow-xl rounded-2xl p-8">
 
-                <a href="view_payments.php" class="hover:text-yellow-200">View Payments</a>
 
-            </div>
+<h1 class="text-4xl font-bold text-center text-amber-900 mb-6">
 
-        </div>
+Payment Form
 
-    </nav>
+</h1>
 
-    <div class="max-w-2xl mx-auto mt-10 bg-white shadow-xl rounded-2xl p-8">
 
-        <h1 class="text-4xl font-bold text-center text-amber-900 mb-6">
 
-            Payment Form
+<form method="POST" class="space-y-5">
 
-        </h1>
 
-        <hr class="mb-8">
+<div>
 
-        <form method="POST" class="space-y-5">
+<label class="font-medium">
+Booking ID
+</label>
 
-            <div>
+<input
+type="number"
+name="booking_id"
+min="1"
+required
+class="w-full border p-3 rounded-lg">
 
-                <label class="block text-lg font-medium mb-2">
+</div>
 
-                    Booking ID:
 
-                </label>
 
-                <input type="number"
-                       name="booking_id"
-                       required
-                       class="w-full border border-gray-300 rounded-lg p-3">
+<div>
 
-            </div>
+<label class="font-medium">
+Amount
+</label>
 
-            <div>
+<input
+type="number"
+name="amount"
+step="0.01"
+min="1"
+required
+class="w-full border p-3 rounded-lg">
 
-                <label class="block text-lg font-medium mb-2">
+</div>
 
-                    Amount:
 
-                </label>
 
-                <input type="number"
-                       step="0.01"
-                       name="amount"
-                       required
-                       class="w-full border border-gray-300 rounded-lg p-3">
+<div>
 
-            </div>
+<label class="font-medium">
+Payment Method
+</label>
 
-            <div>
 
-                <label class="block text-lg font-medium mb-2">
+<select
+name="payment_method"
+class="w-full border p-3 rounded-lg">
 
-                    Payment Method:
 
-                </label>
+<option value="Cash">Cash</option>
 
-                <select name="payment_method"
-                        class="w-full border border-gray-300 rounded-lg p-3">
+<option value="Bkash">Bkash</option>
 
-                    <option value="Cash">Cash</option>
-                    <option value="Bkash">Bkash</option>
-                    <option value="Nagad">Nagad</option>
+<option value="Nagad">Nagad</option>
 
-                </select>
 
-            </div>
+</select>
 
-            <div>
 
-                <label class="block text-lg font-medium mb-2">
+</div>
 
-                    Payment Date:
 
-                </label>
 
-                <input type="date"
-                       name="payment_date"
-                       required
-                       class="w-full border border-gray-300 rounded-lg p-3">
+<div>
 
-            </div>
+<label class="font-medium">
+Payment Date
+</label>
 
-            <div>
 
-                <label class="block text-lg font-medium mb-2">
+<input
+type="date"
+name="payment_date"
+max="<?php echo date('Y-m-d'); ?>"
+required
+class="w-full border p-3 rounded-lg">
 
-                    Payment Status:
 
-                </label>
+</div>
 
-                <select name="payment_status"
-                        class="w-full border border-gray-300 rounded-lg p-3">
 
-                    <option value="Paid">Paid</option>
-                    <option value="Unpaid">Unpaid</option>
 
-                </select>
+<div>
 
-            </div>
+<label class="font-medium">
+Payment Status
+</label>
 
-            <div class="flex gap-4">
 
-                <button type="submit"
-                        name="submit"
-                        class="bg-amber-700 text-white px-6 py-3 rounded-lg hover:bg-amber-900">
+<select
+name="payment_status"
+class="w-full border p-3 rounded-lg">
 
-                    Save Payment
 
-                </button>
+<option value="Paid">
+Paid
+</option>
 
-                <button type="reset"
-                        class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-700">
 
-                    Clear
+<option value="Unpaid">
+Unpaid
+</option>
 
-                </button>
 
-            </div>
+</select>
 
-        </form>
 
-    </div>
+</div>
+
+
+
+<button
+type="submit"
+name="submit"
+class="bg-amber-700 text-white px-6 py-3 rounded-lg hover:bg-amber-900">
+
+Save Payment
+
+</button>
+
+
+
+</form>
+
+
+</div>
+
 
 </body>
 

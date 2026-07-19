@@ -2,7 +2,6 @@
 
 session_start();
 
-
 if(!isset($_SESSION['admin'])){
 
     header("Location: admin_login.php");
@@ -11,11 +10,8 @@ if(!isset($_SESSION['admin'])){
 }
 
 
-
 include 'db_connect.php';
 include 'validation.php';
-
-
 
 
 
@@ -24,9 +20,9 @@ if(!isset($_GET['id']) || !validateID($_GET['id'])){
 
     echo "<script>
 
-    alert('Invalid customer ID');
+    alert('Invalid design ID');
 
-    window.location='view_customers.php';
+    window.location='view_designs.php';
 
     </script>";
 
@@ -41,11 +37,11 @@ $id = $_GET['id'];
 
 
 
-// Check customer exists before deleting
+// Check design exists
 
 $check = $conn->prepare(
 
-    "SELECT Customer_ID FROM customers WHERE Customer_ID=?"
+    "SELECT Design_ID FROM designs WHERE Design_ID=?"
 
 );
 
@@ -66,33 +62,29 @@ $result = $check->get_result();
 
 
 
-
 if($result->num_rows == 0){
 
 
     echo "<script>
 
-    alert('Customer not found');
+    alert('Design not found');
 
-    window.location='view_customers.php';
+    window.location='view_designs.php';
 
     </script>";
 
     exit();
-
 
 }
 
 
 
 
-
-
-// Delete customer
+// Delete design
 
 $delete = $conn->prepare(
 
-    "DELETE FROM customers WHERE Customer_ID=?"
+    "DELETE FROM designs WHERE Design_ID=?"
 
 );
 
@@ -107,36 +99,40 @@ $delete->bind_param(
 
 
 
+try{
 
 
-if($delete->execute()){
+    if($delete->execute()){
+
+
+        echo "<script>
+
+        alert('Design deleted successfully');
+
+        window.location='view_designs.php';
+
+        </script>";
+
+
+    }
+
+
+}
+
+
+catch(mysqli_sql_exception $e){
 
 
     echo "<script>
 
-    alert('Customer deleted successfully');
+    alert('This design cannot be deleted because it is already used in bookings.');
 
-    window.location='view_customers.php';
+    window.location='view_designs.php';
 
     </script>";
 
 
 }
-
-else{
-
-
-    echo "<script>
-
-    alert('Cannot delete customer. This customer may have related bookings.');
-
-    window.location='view_customers.php';
-
-    </script>";
-
-
-}
-
 
 
 ?>

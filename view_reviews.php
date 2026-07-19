@@ -2,72 +2,62 @@
 
 session_start();
 
-if(!isset($_SESSION['admin'])){
+if (!isset($_SESSION['admin'])) {
 
     header("Location: admin_login.php");
     exit();
 
 }
 
-
 include 'db_connect.php';
-
 
 
 $search = "";
 
 
-
-if(isset($_GET['search']) && $_GET['search'] != ""){
+if (isset($_GET['search']) && $_GET['search'] != "") {
 
 
     $search = trim($_GET['search']);
 
 
-
     $stmt = $conn->prepare(
 
         "SELECT
-            bookings.*,
+            reviews.*,
             customers.Name AS Customer_Name,
-            artists.Name AS Artist_Name,
             designs.Design_Name
 
-        FROM bookings
+        FROM reviews
 
         LEFT JOIN customers
-        ON bookings.Customer_ID = customers.Customer_ID
+            ON reviews.Customer_ID = customers.Customer_ID
 
-        LEFT JOIN artists
-        ON bookings.Artist_ID = artists.Artist_ID
+        LEFT JOIN bookings
+            ON reviews.Booking_ID = bookings.Booking_ID
 
         LEFT JOIN designs
-        ON bookings.Design_ID = designs.Design_ID
+            ON bookings.Design_ID = designs.Design_ID
 
         WHERE customers.Name LIKE ?
-        OR artists.Name LIKE ?
-        OR designs.Design_Name LIKE ?
-        OR bookings.Status LIKE ?"
+        OR reviews.Booking_ID LIKE ?
+        OR reviews.Rating LIKE ?"
 
     );
 
 
-
-    $keyword = "%".$search."%";
-
+    $searchTerm = "%".$search."%";
 
 
     $stmt->bind_param(
 
-        "ssss",
+        "sss",
 
-        $keyword,
-        $keyword,
-        $keyword,
-        $keyword
+        $searchTerm,
+        $searchTerm,
+        $searchTerm
 
     );
-
 
 
     $stmt->execute();
@@ -76,10 +66,9 @@ if(isset($_GET['search']) && $_GET['search'] != ""){
     $result = $stmt->get_result();
 
 
-
 }
 
-else{
+else {
 
 
     $result = mysqli_query(
@@ -87,21 +76,20 @@ else{
         $conn,
 
         "SELECT
-            bookings.*,
+            reviews.*,
             customers.Name AS Customer_Name,
-            artists.Name AS Artist_Name,
             designs.Design_Name
 
-        FROM bookings
+        FROM reviews
 
         LEFT JOIN customers
-        ON bookings.Customer_ID = customers.Customer_ID
+            ON reviews.Customer_ID = customers.Customer_ID
 
-        LEFT JOIN artists
-        ON bookings.Artist_ID = artists.Artist_ID
+        LEFT JOIN bookings
+            ON reviews.Booking_ID = bookings.Booking_ID
 
         LEFT JOIN designs
-        ON bookings.Design_ID = designs.Design_ID"
+            ON bookings.Design_ID = designs.Design_ID"
 
     );
 
@@ -109,21 +97,25 @@ else{
 }
 
 
+
 ?>
 
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
 
 <head>
 
-<title>Booking Management</title>
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>View Reviews</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 
 </head>
-
 
 
 <body class="bg-orange-50 min-h-screen">
@@ -131,16 +123,14 @@ else{
 
 <nav class="bg-amber-800 shadow-lg">
 
-
 <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
 
 
 <h1 class="text-white text-2xl font-bold">
 
-Booking Management
+Review Management
 
 </h1>
-
 
 
 <a href="admin_dashboard.php"
@@ -159,16 +149,14 @@ Dashboard
 
 
 
-
 <div class="max-w-7xl mx-auto mt-10 px-6">
 
 
-<h1 class="text-4xl font-bold text-amber-900 mb-6">
+<h1 class="text-4xl font-bold text-center text-amber-900 mb-8">
 
-Booking List
+Customer Reviews
 
 </h1>
-
 
 
 
@@ -183,7 +171,7 @@ name="search"
 
 value="<?php echo htmlspecialchars($search); ?>"
 
-placeholder="Search customer, artist, design or status"
+placeholder="Search customer, booking ID or rating"
 
 class="border p-3 rounded-lg w-96">
 
@@ -198,6 +186,15 @@ class="bg-amber-700 text-white px-5 rounded-lg">
 Search
 
 </button>
+
+
+<a href="view_reviews.php"
+
+class="bg-gray-500 text-white px-5 py-3 rounded-lg">
+
+Reset
+
+</a>
 
 
 </form>
@@ -215,19 +212,19 @@ Search
 <tr class="bg-amber-800 text-white">
 
 
-<th class="p-4">ID</th>
+<th class="p-4">Review ID</th>
 
 <th class="p-4">Customer</th>
 
-<th class="p-4">Artist</th>
+<th class="p-4">Booking ID</th>
 
 <th class="p-4">Design</th>
 
+<th class="p-4">Rating</th>
+
+<th class="p-4">Comment</th>
+
 <th class="p-4">Date</th>
-
-<th class="p-4">Time</th>
-
-<th class="p-4">Status</th>
 
 <th class="p-4">Action</th>
 
@@ -243,13 +240,11 @@ Search
 <tr class="border text-center hover:bg-orange-50">
 
 
-
 <td class="p-4">
 
-<?php echo htmlspecialchars($row['Booking_ID']); ?>
+<?php echo $row['Review_ID']; ?>
 
 </td>
-
 
 
 <td class="p-4">
@@ -259,13 +254,11 @@ Search
 </td>
 
 
-
 <td class="p-4">
 
-<?php echo htmlspecialchars($row['Artist_Name']); ?>
+<?php echo $row['Booking_ID']; ?>
 
 </td>
-
 
 
 <td class="p-4">
@@ -275,48 +268,23 @@ Search
 </td>
 
 
+<td class="p-4 text-yellow-600 font-bold">
 
-<td class="p-4">
-
-<?php echo htmlspecialchars($row['Booking_Date']); ?>
-
-</td>
-
-
-
-<td class="p-4">
-
-<?php echo htmlspecialchars($row['Booking_Time']); ?>
+<?php echo $row['Rating']; ?> ⭐
 
 </td>
 
 
+<td class="p-4">
 
-<td class="p-4 font-bold">
+<?php echo htmlspecialchars($row['Comment']); ?>
+
+</td>
 
 
-<?php
+<td class="p-4">
 
-if($row['Status']=="CONFIRMED"){
-
-echo "<span class='text-green-600'>Confirmed</span>";
-
-}
-
-elseif($row['Status']=="PENDING"){
-
-echo "<span class='text-yellow-600'>Pending</span>";
-
-}
-
-else{
-
-echo "<span class='text-red-600'>Cancelled</span>";
-
-}
-
-?>
-
+<?php echo $row['Review_Date']; ?>
 
 </td>
 
@@ -325,7 +293,7 @@ echo "<span class='text-red-600'>Cancelled</span>";
 <td class="p-4">
 
 
-<a href="edit_booking.php?id=<?php echo $row['Booking_ID']; ?>"
+<a href="edit_review.php?id=<?php echo $row['Review_ID']; ?>"
 
 class="text-blue-600 font-semibold">
 
@@ -335,9 +303,9 @@ Edit
 
 
 
-<a href="delete_booking.php?id=<?php echo $row['Booking_ID']; ?>"
+<a href="delete_review.php?id=<?php echo $row['Review_ID']; ?>"
 
-onclick="return confirm('Delete this booking?')"
+onclick="return confirm('Delete this review?')"
 
 class="text-red-600 font-semibold ml-4">
 
@@ -366,17 +334,16 @@ Delete
 <div class="mt-8">
 
 
-<a href="bookings.php"
+<a href="reviews.php"
 
 class="bg-amber-700 text-white px-6 py-3 rounded-lg">
 
-Add New Booking
+Add New Review
 
 </a>
 
 
 </div>
-
 
 
 </div>

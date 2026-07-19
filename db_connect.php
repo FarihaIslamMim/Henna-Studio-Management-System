@@ -1,16 +1,29 @@
 <?php
 
-$conn = mysqli_connect(
-    "localhost",
-    "root",
-    "",
-    "henna studio management & booking system"
+$host = "localhost";
+
+$username = "root";
+
+$password = "";
+
+$database = "henna studio management & booking system";
+
+
+$conn = new mysqli(
+    $host,
+    $username,
+    $password,
+    $database
 );
 
-if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
+
+if($conn->connect_error){
+
+    die("Database connection failed: " . $conn->connect_error);
+
 }
 
-echo "Database connected successfully";
+
+$conn->set_charset("utf8mb4");
 
 ?>

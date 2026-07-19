@@ -1,26 +1,115 @@
 <?php
 
+session_start();
+
+if (!isset($_SESSION['admin'])) {
+
+    header("Location: admin_login.php");
+    exit();
+
+}
+
 include 'db_connect.php';
+include 'validation.php';
 
-$id = $_GET['id'];
 
-try {
+if (!isset($_GET['id']) || !validateID($_GET['id'])) {
 
-    $sql = "DELETE FROM artists WHERE Artist_ID = $id";
+    echo "<script>
+    alert('Invalid artist ID');
+    window.location='view_artists.php';
+    </script>";
 
-    mysqli_query($conn, $sql);
+    exit();
 
-    header("Location: view_artists.php");
+}
 
-} catch (mysqli_sql_exception $e) {
+
+$id = (int) $_GET['id'];
+
+
+
+// Check artist exists
+
+$check = $conn->prepare(
+
+    "SELECT Artist_ID FROM artists WHERE Artist_ID=?"
+
+);
+
+$check->bind_param(
+
+    "i",
+
+    $id
+
+);
+
+$check->execute();
+
+$result = $check->get_result();
+
+
+
+if ($result->num_rows == 0) {
+
+    echo "<script>
+    alert('Artist not found');
+    window.location='view_artists.php';
+    </script>";
+
+    exit();
+
+}
+
+
+
+// Delete artist
+
+$delete = $conn->prepare(
+
+    "DELETE FROM artists WHERE Artist_ID=?"
+
+);
+
+
+$delete->bind_param(
+
+    "i",
+
+    $id
+
+);
+
+
+
+if ($delete->execute()) {
+
 
     echo "<script>
 
-            alert('This artist cannot be deleted because they already have bookings.');
+    alert('Artist deleted successfully');
 
-            window.location.href = 'view_artists.php';
+    window.location='view_artists.php';
 
-          </script>";
+    </script>";
+
+
 }
+
+else {
+
+
+    echo "<script>
+
+    alert('Cannot delete artist. This artist may have related bookings.');
+
+    window.location='view_artists.php';
+
+    </script>";
+
+
+}
+
 
 ?>
