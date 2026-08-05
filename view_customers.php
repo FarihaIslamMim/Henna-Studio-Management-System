@@ -60,7 +60,7 @@ else{
 
         $conn,
 
-        "SELECT * FROM customers ORDER BY Customer_ID DESC"
+        "SELECT * FROM customers ORDER BY Customer_ID ASC"
 
     );
 
@@ -116,13 +116,16 @@ Customer Management
 </h1>
 
 
+<div class="flex gap-3">
+
 <a href="admin_dashboard.php"
+class="bg-white text-amber-800 px-4 py-2 rounded-lg hover:bg-gray-100 font-semibold">
 
-class="bg-white text-amber-800 px-4 py-2 rounded-lg hover:bg-gray-200">
-
-Dashboard
+← Back to Dashboard
 
 </a>
+
+</div>
 
 
 </div>

@@ -84,9 +84,41 @@ if($result->num_rows == 0){
 }
 
 
+// Check if customer has any bookings
 
+$bookingCheck = $conn->prepare(
 
+"SELECT Booking_ID
+FROM bookings
+WHERE Customer_ID=?"
 
+);
+
+$bookingCheck->bind_param(
+
+"i",
+
+$id
+
+);
+
+$bookingCheck->execute();
+
+$bookingResult = $bookingCheck->get_result();
+
+if($bookingResult->num_rows > 0){
+
+    echo "<script>
+
+    alert('Cannot delete this customer because they have booking records.');
+
+    window.location='view_customers.php';
+
+    </script>";
+
+    exit();
+
+}
 
 // Delete customer
 

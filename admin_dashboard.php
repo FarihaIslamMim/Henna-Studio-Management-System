@@ -46,7 +46,35 @@ $design_count = mysqli_fetch_assoc(
     mysqli_query($conn,"SELECT COUNT(*) AS total FROM designs")
 );
 
+$pending_count = mysqli_fetch_assoc(
+    mysqli_query($conn,
+    "SELECT COUNT(*) AS total
+     FROM bookings
+     WHERE Status='PENDING'")
+);
 
+$confirmed_count = mysqli_fetch_assoc(
+    mysqli_query($conn,
+    "SELECT COUNT(*) AS total
+     FROM bookings
+     WHERE Status='CONFIRMED'")
+);
+
+$cancelled_count = mysqli_fetch_assoc(
+    mysqli_query($conn,
+    "SELECT COUNT(*) AS total
+     FROM bookings
+     WHERE Status='CANCELLED'")
+);
+
+$revenue = mysqli_fetch_assoc(
+    mysqli_query($conn,
+    "SELECT SUM(Amount) AS total
+     FROM payments
+     WHERE Payment_Status='Paid'")
+);
+
+$revenue['total'] = $revenue['total'] ?? 0;
 
 ?>
 
@@ -304,7 +332,79 @@ Manage Reviews
 
 </div>
 
+<div class="bg-white shadow-xl rounded-2xl p-8 text-center">
 
+<h2 class="text-xl font-bold text-yellow-700">
+Pending Bookings
+</h2>
+
+<p class="text-4xl font-bold text-yellow-600 mt-4">
+<?php echo $pending_count['total']; ?>
+</p>
+
+<a href="view_bookings.php?status=PENDING"
+class="text-blue-600 mt-4 inline-block">
+
+Manage Pending
+
+</a>
+
+</div>
+
+<div class="bg-white shadow-xl rounded-2xl p-8 text-center">
+
+<h2 class="text-xl font-bold text-green-700">
+Confirmed Bookings
+</h2>
+
+<p class="text-4xl font-bold text-green-600 mt-4">
+<?php echo $confirmed_count['total']; ?>
+</p>
+
+<a href="view_bookings.php?status=CONFIRMED"
+class="text-blue-600 mt-4 inline-block">
+
+Manage Confirmed
+
+</a>
+
+</div>
+<div class="bg-white shadow-xl rounded-2xl p-8 text-center">
+
+<h2 class="text-xl font-bold text-red-700">
+Cancelled Bookings
+</h2>
+
+<p class="text-4xl font-bold text-red-600 mt-4">
+<?php echo $cancelled_count['total']; ?>
+</p>
+
+<a href="view_bookings.php?status=CANCELLED"
+class="text-blue-600 mt-4 inline-block">
+
+Manage Cancelled
+
+</a>
+
+</div>
+<div class="bg-white shadow-xl rounded-2xl p-8 text-center">
+
+<h2 class="text-xl font-bold text-emerald-700">
+Total Revenue
+</h2>
+
+<p class="text-4xl font-bold text-emerald-600 mt-4">
+৳<?php echo number_format($revenue['total'],2); ?>
+</p>
+
+<a href="view_payments.php?status=Paid"
+class="text-blue-600 mt-4 inline-block">
+
+Manage Payments
+
+</a>
+
+</div>
 
 </div>
 

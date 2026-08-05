@@ -37,61 +37,38 @@ if(isset($_POST['login'])){
 
 
 
-    if($result->num_rows == 1){
+   if($result->num_rows == 1){
 
+    $admin = $result->fetch_assoc();
 
-        $admin = $result->fetch_assoc();
+    if($password == $admin['Password']){
 
-
-
-        if(password_verify($password, $admin['Password'])){
-
-
-            $_SESSION['admin'] = $admin['Admin_ID'];
-
-            $_SESSION['admin_name'] = $admin['Username'];
-
-
-
-            echo "<script>
-
-            alert('Login successful');
-
-            window.location='admin_dashboard.php';
-
-            </script>";
-
-            exit();
-
-
-        }
-
-        else{
-
-
-            echo "<script>
-
-            alert('Invalid password');
-
-            </script>";
-
-
-        }
-
-
-    }
-
-    else{
-
+        $_SESSION['admin'] = $admin['Admin_ID'];
+        $_SESSION['admin_name'] = $admin['Username'];
 
         echo "<script>
-
-        alert('Admin account not found');
-
+        alert('Login successful');
+        window.location='admin_dashboard.php';
         </script>";
-
+        exit();
 
     }
+    else{
+
+        echo "<script>
+        alert('Invalid password');
+        </script>";
+
+    }
+
+}
+else{
+
+    echo "<script>
+    alert('Admin account not found');
+    </script>";
+
+}
 
 
 
@@ -118,24 +95,26 @@ if(isset($_POST['login'])){
 
 </head>
 
-
-
 <body class="bg-orange-50 min-h-screen">
 
+<nav class="bg-amber-800 shadow-lg">
 
+<div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
 
-<nav class="bg-amber-800 p-5">
-
-<h1 class="text-white text-2xl font-bold text-center">
-
+<h1 class="text-white text-2xl font-bold">
 Henna Studio Admin Panel
-
 </h1>
 
+<a href="index.php"
+class="bg-white text-amber-800 px-4 py-2 rounded-lg hover:bg-gray-100">
+
+← Back to Home
+
+</a>
+
+</div>
+
 </nav>
-
-
-
 
 
 <div class="max-w-md mx-auto mt-16 bg-white shadow-xl rounded-xl p-8">

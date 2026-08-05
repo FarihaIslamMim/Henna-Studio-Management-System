@@ -1,9 +1,18 @@
 <?php
 
 include 'db_connect.php';
+$category = "";
+
+if(isset($_GET['category'])){
+    $category = $_GET['category'];
+}
 
 
 $search = "";
+
+if(isset($_GET['search'])){
+    $search = trim($_GET['search']);
+}
 
 
 if(isset($_GET['search']) && $_GET['search'] != ""){
@@ -16,9 +25,10 @@ if(isset($_GET['search']) && $_GET['search'] != ""){
 
         "SELECT * FROM designs
 
-        WHERE Design_Name LIKE ?
-        OR Category LIKE ?
-        OR Description LIKE ?"
+WHERE Design_Code LIKE ?
+OR Category LIKE ?
+
+ORDER BY Design_ID ASC"
 
     );
 
@@ -28,38 +38,38 @@ if(isset($_GET['search']) && $_GET['search'] != ""){
 
     $stmt->bind_param(
 
-        "sss",
+        "ss",
 
-        $keyword,
         $keyword,
         $keyword
 
     );
-
-
+    
     $stmt->execute();
 
-
     $result = $stmt->get_result();
-
-
 
 }
 else{
 
 
-    $result = mysqli_query(
-
-        $conn,
-
-        "SELECT * FROM designs"
-
-    );
+    $sql = "SELECT * FROM designs WHERE 1";
 
 
+if($category != ""){
+    $sql .= " AND Category='$category'";
 }
 
 
+if($search != ""){
+    $sql .= " AND Design_Code LIKE '%$search%'";
+}
+
+$sql .= " ORDER BY Category ASC, Design_ID ASC";
+
+$result = mysqli_query($conn,$sql);
+
+}
 
 $count_result = mysqli_query(
 
@@ -69,13 +79,9 @@ $count_result = mysqli_query(
 
 );
 
-
 $count = mysqli_fetch_assoc($count_result);
 
-
-
 ?>
-
 
 <!DOCTYPE html>
 
@@ -93,57 +99,29 @@ $count = mysqli_fetch_assoc($count_result);
 
 </head>
 
-
 <body class="bg-orange-50 min-h-screen">
-
 
 
 <nav class="bg-amber-800 shadow-lg">
 
-<div class="max-w-7xl mx-auto px-6 py-4">
+<div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
 
+<h1 class="text-white text-2xl font-bold">
 
-<div class="flex flex-wrap justify-center gap-6 text-white font-medium">
+Henna Studio Designs
 
+</h1>
 
-<a href="index.php" class="hover:text-yellow-200">
+<a href="index.php"
+class="bg-white text-amber-800 px-4 py-2 rounded-lg hover:bg-gray-100 font-semibold">
 
-Home
-
-</a>
-
-
-<a href="designs.php" class="hover:text-yellow-200">
-
-Designs
+← Back to Home
 
 </a>
-
-
-<a href="bookings.php" class="hover:text-yellow-200">
-
-Book Appointment
-
-</a>
-
-
-<a href="admin_login.php" class="hover:text-yellow-200">
-
-Admin Login
-
-</a>
-
-
-</div>
-
 
 </div>
 
 </nav>
-
-
-
-
 
 <div class="max-w-7xl mx-auto mt-10 px-6">
 
@@ -197,7 +175,7 @@ name="search"
 
 value="<?php echo htmlspecialchars($search); ?>"
 
-placeholder="Search design, category or description"
+placeholder="Search design code or category"
 
 class="border p-3 rounded-lg w-96">
 
@@ -228,18 +206,50 @@ Reset
 
 
 
-
-
-
-
-<div class="grid md:grid-cols-3 gap-8">
-
-
-
-
-
 <?php if(mysqli_num_rows($result) > 0){ ?>
 
+<div class="flex flex-wrap justify-center gap-3 mb-8">
+
+
+<a href="designs.php"
+class="bg-amber-700 text-white px-4 py-2 rounded">
+All
+</a>
+
+
+<a href="designs.php?category=Bridal"
+class="bg-amber-700 text-white px-4 py-2 rounded">
+Bridal
+</a>
+
+
+<a href="designs.php?category=Arabic"
+class="bg-amber-700 text-white px-4 py-2 rounded">
+Arabic
+</a>
+
+
+<a href="designs.php?category=Modern"
+class="bg-amber-700 text-white px-4 py-2 rounded">
+Modern
+</a>
+
+
+<a href="designs.php?category=Stylish"
+class="bg-amber-700 text-white px-4 py-2 rounded">
+Stylish
+</a>
+
+
+<a href="designs.php?category=Floral"
+class="bg-amber-700 text-white px-4 py-2 rounded">
+Floral
+</a>
+
+
+</div>
+
+<div class="grid md:grid-cols-3 gap-8">
 
 
 <?php while($row = mysqli_fetch_assoc($result)){ ?>
@@ -254,13 +264,9 @@ Reset
 
 $image = "images/Simple Henna.jpeg";
 
-
-if(isset($row['Image']) && !empty($row['Image'])){
-
-    $image = "images/".$row['Image'];
-
+if(!empty($row['Image'])){
+    $image = "images/" . $row['Image'];
 }
-
 
 ?>
 
@@ -270,7 +276,9 @@ if(isset($row['Image']) && !empty($row['Image'])){
 
 src="<?php echo htmlspecialchars($image); ?>"
 
-class="w-full h-72 object-cover"
+class="w-full h-72 object-cover cursor-pointer"
+
+onclick="openImage('<?php echo htmlspecialchars($image); ?>')"
 
 onerror="this.src='images/Simple Henna.jpeg';">
 
@@ -284,7 +292,7 @@ onerror="this.src='images/Simple Henna.jpeg';">
 
 <h2 class="text-2xl font-bold text-amber-800">
 
-<?php echo htmlspecialchars($row['Design_Name']); ?>
+Design Code: <?php echo htmlspecialchars($row['Design_Code']); ?>
 
 </h2>
 
@@ -333,23 +341,7 @@ onerror="this.src='images/Simple Henna.jpeg';">
 </p>
 
 
-
-
-
-
-<p class="mt-4 text-gray-600">
-
-
-<?php echo htmlspecialchars($row['Description']); ?>
-
-
-</p>
-
-
-
-
-
-<a href="bookings.php">
+<a href="bookings.php?design_id=<?php echo $row['Design_ID']; ?>">
 
 
 <button
@@ -410,8 +402,41 @@ No designs found.
 
 </div>
 
+<div
+id="imageModal"
+class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
 
+<span
+onclick="closeImage()"
+class="absolute top-5 right-8 text-white text-5xl cursor-pointer">
+
+&times;
+
+</span>
+
+<img
+id="popupImage"
+class="max-w-[90%] max-h-[90%] rounded-xl shadow-2xl">
+
+</div>
 
 </body>
+<script>
+
+function openImage(src){
+
+document.getElementById("popupImage").src = src;
+
+document.getElementById("imageModal").classList.remove("hidden");
+
+}
+
+function closeImage(){
+
+document.getElementById("imageModal").classList.add("hidden");
+
+}
+
+</script>
 
 </html>

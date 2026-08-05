@@ -26,7 +26,7 @@ if (isset($_GET['search']) && $_GET['search'] != "") {
         "SELECT
             reviews.*,
             customers.Name AS Customer_Name,
-            designs.Design_Name
+            designs.Design_Code
 
         FROM reviews
 
@@ -78,7 +78,7 @@ else {
         "SELECT
             reviews.*,
             customers.Name AS Customer_Name,
-            designs.Design_Name
+            designs.Design_Code
 
         FROM reviews
 
@@ -133,13 +133,16 @@ Review Management
 </h1>
 
 
+<div class="flex gap-3">
+
 <a href="admin_dashboard.php"
+class="bg-white text-amber-800 px-4 py-2 rounded-lg hover:bg-gray-100">
 
-class="bg-white text-amber-800 px-4 py-2 rounded-lg">
-
-Dashboard
+← Back to Dashboard
 
 </a>
+
+</div>
 
 
 </div>
@@ -263,7 +266,7 @@ Reset
 
 <td class="p-4">
 
-<?php echo htmlspecialchars($row['Design_Name']); ?>
+<?php echo htmlspecialchars($row['Design_Code']); ?>
 
 </td>
 

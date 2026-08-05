@@ -67,6 +67,7 @@ if(isset($_POST['update'])){
     $design_id = $_POST['design_id'];
     $booking_date = $_POST['booking_date'];
     $booking_time = $_POST['booking_time'];
+    $status = $_POST['status'];
 
 
 
@@ -82,62 +83,54 @@ if(isset($_POST['update'])){
 
 
         // Check customer
+$customer = $conn->prepare(
+    "SELECT Customer_ID FROM customers WHERE Customer_ID=?"
+);
 
-        $customer = $conn->prepare(
+$customer->bind_param("i",$customer_id);
+$customer->execute();
 
-            "SELECT Customer_ID FROM customers WHERE Customer_ID=?"
-
-        );
-
-        $customer->bind_param("i",$customer_id);
-
-        $customer->execute();
+$customer_result = $customer->get_result();
 
 
 
-        // Check artist
+// Check artist
+$artist = $conn->prepare(
+    "SELECT Artist_ID FROM artists WHERE Artist_ID=?"
+);
 
-        $artist = $conn->prepare(
+$artist->bind_param("i",$artist_id);
+$artist->execute();
 
-            "SELECT Artist_ID FROM artists WHERE Artist_ID=?"
-
-        );
-
-        $artist->bind_param("i",$artist_id);
-
-        $artist->execute();
+$artist_result = $artist->get_result();
 
 
 
-        // Check design
+// Check design
+$design = $conn->prepare(
+    "SELECT Design_ID FROM designs WHERE Design_ID=?"
+);
 
-        $design = $conn->prepare(
+$design->bind_param("i",$design_id);
+$design->execute();
 
-            "SELECT Design_ID FROM designs WHERE Design_ID=?"
+$design_result = $design->get_result();
 
-        );
-
-        $design->bind_param("i",$design_id);
-
-        $design->execute();
-
-
-
-        if($customer->get_result()->num_rows == 0){
+        if($customer_result->num_rows == 0){
 
 
             echo "<script>alert('Invalid customer ID');</script>";
 
         }
 
-        elseif($artist->get_result()->num_rows == 0){
+        elseif($artist_result->num_rows == 0){
 
 
             echo "<script>alert('Invalid artist ID');</script>";
 
         }
 
-        elseif($design->get_result()->num_rows == 0){
+       elseif($design_result->num_rows == 0){
 
 
             echo "<script>alert('Invalid design ID');</script>";
@@ -192,29 +185,31 @@ if(isset($_POST['update'])){
 
                 $update = $conn->prepare(
 
-                    "UPDATE bookings
-                     SET Customer_ID=?,
-                         Artist_ID=?,
-                         Design_ID=?,
-                         Booking_Date=?,
-                         Booking_Time=?
-                     WHERE Booking_ID=?"
+"UPDATE bookings
+ SET Customer_ID=?,
+     Artist_ID=?,
+     Design_ID=?,
+     Booking_Date=?,
+     Booking_Time=?,
+     Status=?
+ WHERE Booking_ID=?"
 
-                );
+);
 
 
                 $update->bind_param(
 
-                    "iiissi",
+"iiisssi",
 
-                    $customer_id,
-                    $artist_id,
-                    $design_id,
-                    $booking_date,
-                    $booking_time,
-                    $id
+$customer_id,
+$artist_id,
+$design_id,
+$booking_date,
+$booking_time,
+$status,
+$id
 
-                );
+);
 
 
 
@@ -316,6 +311,31 @@ name="booking_time"
 value="<?php echo $row['Booking_Time']; ?>"
 required
 class="w-full border p-3 rounded">
+<label>Status</label>
+
+<select name="status"
+class="w-full border p-3 rounded">
+
+
+<option value="PENDING"
+<?php if($row['Status']=="PENDING") echo "selected"; ?>>
+Pending
+</option>
+
+
+<option value="CONFIRMED"
+<?php if($row['Status']=="CONFIRMED") echo "selected"; ?>>
+Confirmed
+</option>
+
+
+<option value="CANCELLED"
+<?php if($row['Status']=="CANCELLED") echo "selected"; ?>>
+Cancelled
+</option>
+
+
+</select>
 
 
 

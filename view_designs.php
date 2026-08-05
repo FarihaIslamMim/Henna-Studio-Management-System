@@ -26,7 +26,7 @@ if(isset($_GET['search']) && $_GET['search'] != ""){
 
         "SELECT * FROM designs
 
-        WHERE Design_Name LIKE ?
+        WHERE Design_Code LIKE ?
         OR Category LIKE ?
         OR Availability LIKE ?"
 
@@ -116,15 +116,17 @@ Design Management
 
 </h1>
 
-
+<div class="flex gap-3">
 
 <a href="admin_dashboard.php"
-
-class="bg-white text-amber-800 px-4 py-2 rounded-lg">
-
-Dashboard
+class="bg-white text-amber-800 px-4 py-2 rounded-lg hover:bg-gray-100">
+← Back to Dashboard
 
 </a>
+
+</div>
+
+</div>
 
 
 </div>
@@ -182,7 +184,7 @@ name="search"
 
 value="<?php echo htmlspecialchars($search); ?>"
 
-placeholder="Search design, category or status"
+placeholder="Search code, category or status"
 
 class="border p-3 rounded-lg w-96">
 
@@ -227,15 +229,13 @@ Reset
 
 <th class="p-4">ID</th>
 
-<th class="p-4">Name</th>
+<th class="p-4">Code</th>
 
 <th class="p-4">Category</th>
 
 <th class="p-4">Price</th>
 
 <th class="p-4">Availability</th>
-
-<th class="p-4">Description</th>
 
 <th class="p-4">Action</th>
 
@@ -263,7 +263,7 @@ Reset
 
 <td class="p-4">
 
-<?php echo htmlspecialchars($row['Design_Name']); ?>
+<?php echo htmlspecialchars($row['Design_Code']); ?>
 
 </td>
 
@@ -299,35 +299,20 @@ Reset
 
 <td class="p-4">
 
-<?php echo htmlspecialchars($row['Description']); ?>
-
-</td>
-
-
-
-<td class="p-4">
-
-
 <a href="edit_design.php?id=<?php echo $row['Design_ID']; ?>"
-
 class="text-blue-600 font-semibold">
 
 Edit
 
 </a>
 
-
-
 <a href="delete_design.php?id=<?php echo $row['Design_ID']; ?>"
-
 onclick="return confirm('Delete this design?')"
-
 class="text-red-600 font-semibold ml-4">
 
 Delete
 
 </a>
-
 
 </td>
 

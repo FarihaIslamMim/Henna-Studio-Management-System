@@ -16,7 +16,11 @@ include 'db_connect.php';
 
 $search = "";
 
+$status = "";
 
+if(isset($_GET['status'])){
+    $status = $_GET['status'];
+}
 
 if(isset($_GET['search']) && $_GET['search'] != ""){
 
@@ -30,7 +34,8 @@ if(isset($_GET['search']) && $_GET['search'] != ""){
         "SELECT
             payments.*,
             customers.Name AS Customer_Name,
-            designs.Design_Name
+customers.Phone AS Customer_Phone,
+designs.Design_Code
 
         FROM payments
 
@@ -72,35 +77,40 @@ if(isset($_GET['search']) && $_GET['search'] != ""){
 
 else{
 
+    $sql = "
 
-    $stmt = $conn->prepare(
+    SELECT
+        payments.*,
+        customers.Name AS Customer_Name,
+customers.Phone AS Customer_Phone,
+designs.Design_Code
 
-        "SELECT
-            payments.*,
-            customers.Name AS Customer_Name,
-            designs.Design_Name
+    FROM payments
 
-        FROM payments
+    LEFT JOIN bookings
+    ON payments.Booking_ID = bookings.Booking_ID
 
-        LEFT JOIN bookings
-        ON payments.Booking_ID = bookings.Booking_ID
+    LEFT JOIN customers
+    ON bookings.Customer_ID = customers.Customer_ID
 
-        LEFT JOIN customers
-        ON bookings.Customer_ID = customers.Customer_ID
+    LEFT JOIN designs
+    ON bookings.Design_ID = designs.Design_ID
 
-        LEFT JOIN designs
-        ON bookings.Design_ID = designs.Design_ID"
+    WHERE 1
+    ";
 
-    );
+    if($status != ""){
+        $sql .= " AND payments.Payment_Status='$status'";
+    }
 
+    $result = mysqli_query($conn,$sql);
 
 }
 
-
-
-$stmt->execute();
-
-$result = $stmt->get_result();
+if(isset($stmt)){
+    $stmt->execute();
+    $result = $stmt->get_result();
+}
 
 
 ?>
@@ -140,15 +150,18 @@ Payment Management
 
 </h1>
 
-
+<div class="flex gap-3">
 
 <a href="admin_dashboard.php"
+class="bg-white text-amber-800 px-4 py-2 rounded-lg hover:bg-gray-100">
 
-class="bg-white text-amber-800 px-4 py-2 rounded-lg">
-
-Dashboard
+← Back to Dashboard
 
 </a>
+
+</div>
+
+</div>
 
 
 </div>
@@ -166,7 +179,16 @@ Dashboard
 
 <h1 class="text-4xl font-bold text-amber-900 mb-6">
 
-Payment List
+<?php
+
+if($status!=""){
+    echo $status." Payments";
+}
+else{
+    echo "Payment List";
+}
+
+?>
 
 </h1>
 
@@ -225,6 +247,8 @@ Search
 
 <th class="p-4">Customer</th>
 
+<th class="p-4">Phone</th>
+
 <th class="p-4">Design</th>
 
 <th class="p-4">Amount</th>
@@ -272,11 +296,13 @@ Search
 
 </td>
 
-
+<td class="p-4">
+<?php echo htmlspecialchars($row['Customer_Phone']); ?>
+</td>
 
 <td class="p-4">
 
-<?php echo htmlspecialchars($row['Design_Name']); ?>
+<?php echo htmlspecialchars($row['Design_Code']); ?>
 
 </td>
 
@@ -352,18 +378,23 @@ echo "<span class='text-red-600'>Unpaid</span>";
 
 class="text-blue-600 font-semibold">
 
+<a href="receipt.php?id=<?php echo $row['Payment_ID']; ?>"
+class="text-green-600 font-semibold">
+
+Receipt
+
+</a>
+
+<a href="edit_payment.php?id=<?php echo $row['Payment_ID']; ?>"
+class="text-blue-600 font-semibold ml-3">
+
 Edit
 
 </a>
 
-
-
-
 <a href="delete_payment.php?id=<?php echo $row['Payment_ID']; ?>"
-
 onclick="return confirm('Delete this payment?')"
-
-class="text-red-600 font-semibold ml-4">
+class="text-red-600 font-semibold ml-3">
 
 Delete
 

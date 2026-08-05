@@ -75,17 +75,16 @@ $row = $result->fetch_assoc();
 if(isset($_POST['update'])){
 
 
-    $name = trim($_POST['design_name']);
+    $name = trim($_POST['Design_Code']);
     $category = trim($_POST['category']);
     $price = $_POST['price'];
     $availability = $_POST['availability'];
-    $description = trim($_POST['description']);
 
 
 
     if(strlen($name) < 3){
 
-        echo "<script>alert('Design name must contain minimum 3 characters');</script>";
+        echo "<script>alert('Design code must contain minimum 3 characters');</script>";
 
     }
 
@@ -104,12 +103,6 @@ if(isset($_POST['update'])){
     }
 
 
-    elseif(strlen($description) < 5){
-
-        echo "<script>alert('Description is too short');</script>";
-
-    }
-
 
     else{
 
@@ -118,7 +111,7 @@ if(isset($_POST['update'])){
 
             "SELECT Design_ID 
              FROM designs
-             WHERE Design_Name=?
+             WHERE Design_Code=?
              AND Design_ID != ?"
 
         );
@@ -144,7 +137,7 @@ if(isset($_POST['update'])){
         if($duplicate->num_rows > 0){
 
 
-            echo "<script>alert('Design name already exists');</script>";
+            echo "<script>alert('Design code already exists');</script>";
 
 
         }
@@ -156,12 +149,11 @@ if(isset($_POST['update'])){
 
                 "UPDATE designs
 
-                SET Design_Name=?,
+                SET Design_Code=?,
                     Category=?,
                     Price=?,
-                    Availability=?,
-                    Description=?
-
+                    Availability=?
+                
                 WHERE Design_ID=?"
 
             );
@@ -170,13 +162,12 @@ if(isset($_POST['update'])){
 
             $update->bind_param(
 
-                "ssdssi",
+                "ssdsi",
 
                 $name,
                 $category,
                 $price,
                 $availability,
-                $description,
                 $id
 
             );
@@ -251,15 +242,15 @@ Edit Design
 
 <div>
 
-<label>Design Name</label>
+<label>Design Code</label>
 
 <input
 
 type="text"
 
-name="design_name"
+name="Design_Code"
 
-value="<?php echo htmlspecialchars($row['Design_Name']); ?>"
+value="<?php echo htmlspecialchars($row['Design_Code']); ?>"
 
 required
 
@@ -275,38 +266,29 @@ class="w-full border p-3 rounded">
 <label>Category</label>
 
 
-<select name="category"
+<select name="category" class="w-full border p-3 rounded">
 
-class="w-full border p-3 rounded">
+<option value="Bridal" <?php if($row['Category']=="Bridal") echo "selected"; ?>>Bridal</option>
 
+<option value="Semi Bridal" <?php if($row['Category']=="Semi Bridal") echo "selected"; ?>>Semi Bridal</option>
 
-<option value="Bridal" <?php if($row['Category']=="Bridal") echo "selected"; ?>>
+<option value="Arabic" <?php if($row['Category']=="Arabic") echo "selected"; ?>>Arabic</option>
 
-Bridal
+<option value="Front Hand" <?php if($row['Category']=="Front Hand") echo "selected"; ?>>Front Hand</option>
 
-</option>
+<option value="Back Hand" <?php if($row['Category']=="Back Hand") echo "selected"; ?>>Back Hand</option>
 
+<option value="Simple" <?php if($row['Category']=="Simple") echo "selected"; ?>>Simple</option>
 
-<option value="Arabic" <?php if($row['Category']=="Arabic") echo "selected"; ?>>
+<option value="Royal" <?php if($row['Category']=="Royal") echo "selected"; ?>>Royal</option>
 
-Arabic
+<option value="Gorgeous" <?php if($row['Category']=="Gorgeous") echo "selected"; ?>>Gorgeous</option>
 
-</option>
+<option value="Modern" <?php if($row['Category']=="Modern") echo "selected"; ?>>Modern</option>
 
+<option value="Stylish" <?php if($row['Category']=="Stylish") echo "selected"; ?>>Stylish</option>
 
-<option value="Modern" <?php if($row['Category']=="Modern") echo "selected"; ?>>
-
-Modern
-
-</option>
-
-
-<option value="Traditional" <?php if($row['Category']=="Traditional") echo "selected"; ?>>
-
-Traditional
-
-</option>
-
+<option value="Floral" <?php if($row['Category']=="Floral") echo "selected"; ?>>Floral</option>
 
 </select>
 
@@ -377,17 +359,6 @@ Unavailable
 
 
 <div>
-
-<label>Description</label>
-
-
-<textarea
-
-name="description"
-
-required
-
-class="w-full border p-3 rounded"><?php echo htmlspecialchars($row['Description']); ?></textarea>
 
 
 </div>

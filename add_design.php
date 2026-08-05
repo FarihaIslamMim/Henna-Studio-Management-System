@@ -16,18 +16,107 @@ include 'db_connect.php';
 
 if(isset($_POST['submit'])){
 
-
-    $name = trim($_POST['design_name']);
     $category = trim($_POST['category']);
+    switch($category){
+
+    case "Bridal":
+        $prefix = "BR";
+        break;
+
+    case "Arabic":
+        $prefix = "AR";
+        break;
+
+    case "Front Hand":
+        $prefix = "FH";
+        break;
+
+    case "Back Hand":
+        $prefix = "BH";
+        break;
+
+    case "Floral":
+    $prefix = "FL";
+    break;
+
+    case "Semi Bridal":
+        $prefix = "SB";
+        break;
+
+    case "Royal":
+        $prefix = "RO";
+        break;
+
+    case "Simple":
+        $prefix = "SP";
+        break;
+
+    case "Gorgeous":
+        $prefix = "GO";
+        break;
+
+    case "Modern":
+        $prefix = "MD";
+        break;
+
+    case "Stylish":
+        $prefix = "ST";
+        break;
+
+    default:
+        $prefix = "DS";
+}
+$sql = "SELECT Design_Code
+        FROM designs
+        WHERE Design_Code LIKE '$prefix%'
+        ORDER BY Design_Code ASC
+        LIMIT 1";
+
+$result = mysqli_query($conn, $sql);
+
+if(mysqli_num_rows($result) > 0){
+
+    $row = mysqli_fetch_assoc($result);
+
+    $number = intval(substr($row['Design_Code'], 2)) + 1;
+
+}else{
+
+    $number = 1;
+
+}
+
+$design_code = $prefix . str_pad($number, 3, "0", STR_PAD_LEFT);
     $price = $_POST['price'];
     $availability = $_POST['availability'];
-    $description = trim($_POST['description']);
+   $originalName = $_FILES['image']['name'];
+$tmp = $_FILES['image']['tmp_name'];
+$size = $_FILES['image']['size'];
+
+$extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+
+$image = $design_code . "." . $extension;
+$allowed = ["jpg", "jpeg", "png"];
+
+if(!in_array($extension, $allowed)){
+
+    echo "<script>alert('Only JPG, JPEG and PNG images are allowed.');</script>";
+    exit();
+
+}
+
+if($size > 2 * 1024 * 1024){
+
+    echo "<script>alert('Image size must be less than 2 MB.');</script>";
+    exit();
+
+}
 
 
 
-    if(strlen($name) < 3){
+    if(empty($design_code)){
 
-        echo "<script>alert('Design name must contain minimum 3 characters');</script>";
+        echo "<script>alert('Design code must contain minimum 3 characters');</script>";
 
     }
 
@@ -43,11 +132,6 @@ if(isset($_POST['submit'])){
 
     }
 
-    elseif(strlen($description) < 5){
-
-        echo "<script>alert('Description is too short');</script>";
-
-    }
 
     else{
 
@@ -56,18 +140,18 @@ if(isset($_POST['submit'])){
 
             "SELECT Design_ID 
              FROM designs
-             WHERE Design_Name=?"
+             WHERE Design_Code=?"
 
         );
 
 
-        $check->bind_param(
+       $check->bind_param(
 
-            "s",
+"s",
 
-            $name
+$design_code
 
-        );
+);
 
 
         $check->execute();
@@ -86,35 +170,34 @@ if(isset($_POST['submit'])){
 
         else{
 
+move_uploaded_file($tmp, "images/" . $image);
 
-            $stmt = $conn->prepare(
+$stmt = $conn->prepare(
 
-                "INSERT INTO designs
+    "INSERT INTO designs
+    (
+    Design_Code,
+    Category,
+    Price,
+    Availability,
+    Image
+    )
+    VALUES(?,?,?,?,?)"
 
-                (
-                Design_Name,
-                Category,
-                Price,
-                Availability,
-                Description
-                )
-
-                VALUES(?,?,?,?,?)"
-
-            );
+);
 
 
-            $stmt->bind_param(
+           $stmt->bind_param(
 
-                "ssdss",
+"ssdss",
 
-                $name,
-                $category,
-                $price,
-                $availability,
-                $description
+$design_code,
+$category,
+$price,
+$availability,
+$image
 
-            );
+);
 
 
 
@@ -210,23 +293,12 @@ Add New Design
 
 
 
-<form method="POST" class="space-y-5">
+<form method="POST" enctype="multipart/form-data" class="space-y-5">
 
 
 
 <div>
 
-<label>Design Name</label>
-
-<input
-
-type="text"
-
-name="design_name"
-
-required
-
-class="w-full border p-3 rounded">
 
 </div>
 
@@ -245,12 +317,16 @@ class="w-full border p-3 rounded">
 
 
 <option value="Bridal">Bridal</option>
-
+<option value="Semi Bridal">Semi Bridal</option>
 <option value="Arabic">Arabic</option>
-
+<option value="Front Hand">Front Hand</option>
+<option value="Back Hand">Back Hand</option>
+<option value="Floral">Floral</option>
+<option value="Simple">Simple</option>
+<option value="Royal">Royal</option>
+<option value="Gorgeous">Gorgeous</option>
 <option value="Modern">Modern</option>
-
-<option value="Traditional">Traditional</option>
+<option value="Stylish">Stylish</option>
 
 
 </select>
@@ -319,17 +395,24 @@ Unavailable
 
 <div>
 
-<label>Description</label>
 
 
-<textarea
+</div>
+<div>
 
-name="description"
+<label>Design Image</label>
+
+<input
+
+type="file"
+
+name="image"
+
+accept=".jpg,.jpeg,.png"
 
 required
 
-class="w-full border p-3 rounded"></textarea>
-
+class="w-full border p-3 rounded">
 
 </div>
 

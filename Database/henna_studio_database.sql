@@ -131,18 +131,17 @@ INSERT INTO `customers` (`Customer_ID`, `Name`, `Phone`, `Email`, `Password`, `A
 
 CREATE TABLE `designs` (
   `Design_ID` int(11) NOT NULL,
-  `Design_Name` varchar(100) NOT NULL,
+  `Design_Code` varchar(100) NOT NULL,
   `Category` varchar(50) DEFAULT NULL CHECK (`Category` in ('Bridal','Arabic','Indian','Pakistani','Simple','Floral','Mandala','Moroccan','Minimalist','Traditional','Modern','Glitter','Eid Special','Festival','Finger Design','Back Hand','Front Hand','Full Hand','SEMI-BRIDAL')),
   `Price` decimal(10,2) DEFAULT NULL CHECK (`Price` > 0),
   `Availability` enum('Available','Unavailable') DEFAULT NULL,
-  `Description` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `designs`
 --
 
-INSERT INTO `designs` (`Design_ID`, `Design_Name`, `Category`, `Price`, `Availability`, `Description`) VALUES
+INSERT INTO `designs` (`Design_ID`, `Design_Code`, `Category`, `Price`, `Availability`) VALUES
 (1, 'Royal Bridal', 'Bridal', 4000.00, 'Available', 'Full hand bridal henna'),
 (2, 'Arabic Bloom', 'Arabic', 2000.00, 'Unavailable', 'Elegant Arabic design'),
 (3, 'Flower Magic', 'Floral', 1500.00, 'Available', 'Beautiful floral pattern');

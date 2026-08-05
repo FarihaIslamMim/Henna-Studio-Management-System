@@ -14,7 +14,16 @@ if(isset($_POST['submit'])){
     $address = trim($_POST['address']);
     $registration_date = $_POST['registration_date'];
 
+if(!preg_match('/^(13|14|15|16|17|18|19)[0-9]{8}$/', $phone)){
 
+    echo "<script>
+    alert('Enter a valid Bangladeshi mobile number.');
+    </script>";
+
+    exit();
+
+}
+$phone = "+880".$phone;
 
     if(!validateName($name)){
 

@@ -65,7 +65,7 @@ else{
 
         $conn,
 
-        "SELECT * FROM artists ORDER BY Artist_ID DESC"
+        "SELECT * FROM artists ORDER BY Artist_ID ASC"
 
     );
 
@@ -122,14 +122,16 @@ Artist Management
 
 </h1>
 
+<div class="flex gap-3">
 
 <a href="admin_dashboard.php"
-
-class="bg-white text-amber-800 px-4 py-2 rounded-lg hover:bg-gray-200">
-
-Dashboard
-
+class="bg-white text-amber-800 px-4 py-2 rounded-lg hover:bg-gray-100">
+← Back to Dashboard
 </a>
+
+</div>
+
+</div>
 
 
 </div>

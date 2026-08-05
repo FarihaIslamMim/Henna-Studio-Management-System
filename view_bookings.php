@@ -16,7 +16,11 @@ include 'db_connect.php';
 
 $search = "";
 
+$status = "";
 
+if(isset($_GET['status'])){
+    $status = $_GET['status'];
+}
 
 if(isset($_GET['search']) && $_GET['search'] != ""){
 
@@ -30,8 +34,9 @@ if(isset($_GET['search']) && $_GET['search'] != ""){
         "SELECT
             bookings.*,
             customers.Name AS Customer_Name,
-            artists.Name AS Artist_Name,
-            designs.Design_Name
+customers.Phone AS Customer_Phone,
+artists.Name AS Artist_Name,
+designs.Design_Code
 
         FROM bookings
 
@@ -46,7 +51,7 @@ if(isset($_GET['search']) && $_GET['search'] != ""){
 
         WHERE customers.Name LIKE ?
         OR artists.Name LIKE ?
-        OR designs.Design_Name LIKE ?
+        OR designs.Design_Code LIKE ?
         OR bookings.Status LIKE ?"
 
     );
@@ -81,30 +86,34 @@ if(isset($_GET['search']) && $_GET['search'] != ""){
 
 else{
 
+    $sql = "
 
-    $result = mysqli_query(
+    SELECT
+        bookings.*,
+        customers.Name AS Customer_Name,
+        customers.Phone AS Customer_Phone,
+        artists.Name AS Artist_Name,
+        designs.Design_Code
 
-        $conn,
+    FROM bookings
 
-        "SELECT
-            bookings.*,
-            customers.Name AS Customer_Name,
-            artists.Name AS Artist_Name,
-            designs.Design_Name
+    LEFT JOIN customers
+    ON bookings.Customer_ID = customers.Customer_ID
 
-        FROM bookings
+    LEFT JOIN artists
+    ON bookings.Artist_ID = artists.Artist_ID
 
-        LEFT JOIN customers
-        ON bookings.Customer_ID = customers.Customer_ID
+    LEFT JOIN designs
+    ON bookings.Design_ID = designs.Design_ID
 
-        LEFT JOIN artists
-        ON bookings.Artist_ID = artists.Artist_ID
+    WHERE 1
+    ";
 
-        LEFT JOIN designs
-        ON bookings.Design_ID = designs.Design_ID"
+    if($status != ""){
+        $sql .= " AND bookings.Status='$status'";
+    }
 
-    );
-
+    $result = mysqli_query($conn,$sql);
 
 }
 
@@ -141,15 +150,18 @@ Booking Management
 
 </h1>
 
-
+<div class="flex gap-3">
 
 <a href="admin_dashboard.php"
-
-class="bg-white text-amber-800 px-4 py-2 rounded-lg">
-
-Dashboard
+class="bg-white text-amber-800 px-4 py-2 rounded-lg hover:bg-gray-100">
+← Back to Dashboard
 
 </a>
+
+
+</div>
+
+</div>
 
 
 </div>
@@ -165,7 +177,16 @@ Dashboard
 
 <h1 class="text-4xl font-bold text-amber-900 mb-6">
 
-Booking List
+<?php
+
+if($status!=""){
+    echo ucfirst(strtolower($status))." Bookings";
+}
+else{
+    echo "Booking List";
+}
+
+?>
 
 </h1>
 
@@ -218,6 +239,7 @@ Search
 <th class="p-4">ID</th>
 
 <th class="p-4">Customer</th>
+<th class="p-4">Phone</th>
 
 <th class="p-4">Artist</th>
 
@@ -258,7 +280,9 @@ Search
 
 </td>
 
-
+<td class="p-4">
+<?php echo htmlspecialchars($row['Customer_Phone']); ?>
+</td>
 
 <td class="p-4">
 
@@ -270,7 +294,7 @@ Search
 
 <td class="p-4">
 
-<?php echo htmlspecialchars($row['Design_Name']); ?>
+<?php echo htmlspecialchars($row['Design_Code']); ?>
 
 </td>
 
@@ -297,21 +321,29 @@ Search
 
 <?php
 
-if($row['Status']=="CONFIRMED"){
+$currentStatus = strtoupper(trim($row['Status']));
+
+if($currentStatus=="CONFIRMED"){
 
 echo "<span class='text-green-600'>Confirmed</span>";
 
 }
 
-elseif($row['Status']=="PENDING"){
+elseif($currentStatus=="PENDING"){
 
 echo "<span class='text-yellow-600'>Pending</span>";
 
 }
 
-else{
+elseif($currentStatus=="CANCELLED"){
 
 echo "<span class='text-red-600'>Cancelled</span>";
+
+}
+
+else{
+
+echo "<span class='text-gray-600'>Unknown</span>";
 
 }
 

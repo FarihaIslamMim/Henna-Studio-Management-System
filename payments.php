@@ -2,7 +2,6 @@
 
 include 'db_connect.php';
 
-
 if(isset($_POST['submit'])){
 
 
@@ -296,15 +295,71 @@ Payment Form
 <div>
 
 <label class="font-medium">
-Booking ID
+Booking
 </label>
 
-<input
-type="number"
+<select
+id="bookingSelect"
 name="booking_id"
-min="1"
 required
 class="w-full border p-3 rounded-lg">
+
+<option value="">Select Booking</option>
+
+<?php
+
+$bookings = mysqli_query($conn,
+
+SELECT
+bookings.Booking_ID,
+customers.Name,
+customers.Phone,
+designs.Design_Code,
+designs.Price
+
+FROM bookings
+
+JOIN customers
+ON bookings.Customer_ID = customers.Customer_ID
+JOIN designs
+ON bookings.Design_ID = designs.Design_ID
+
+WHERE bookings.Status='CONFIRMED'
+
+AND bookings.Booking_ID NOT IN
+(
+SELECT Booking_ID FROM payments
+)
+
+ORDER BY bookings.Booking_ID ASC");
+
+while($booking = mysqli_fetch_assoc($bookings)){
+
+?>
+
+<option
+value="<?php echo $booking['Booking_ID']; ?>"
+data-price="<?php echo $booking['Price']; ?>">
+
+Booking #<?php echo $booking['Booking_ID']; ?>
+
+-
+
+<?php echo htmlspecialchars($booking['Name']); ?>
+
+-
+
+<?php echo htmlspecialchars($booking['Design_Code']); ?>
+
+-
+
+(<?php echo htmlspecialchars($booking['Phone']); ?>)
+
+</option>
+
+<?php } ?>
+
+</select>
 
 </div>
 
@@ -318,6 +373,7 @@ Amount
 
 <input
 type="number"
+id="amount"
 name="amount"
 step="0.01"
 min="1"
@@ -418,6 +474,20 @@ Save Payment
 
 </div>
 
+<script>
+
+const booking = document.getElementById("bookingSelect");
+
+booking.addEventListener("change",function(){
+
+let price =
+this.options[this.selectedIndex].dataset.price;
+
+document.getElementById("amount").value = price;
+
+});
+
+</script>
 
 </body>
 

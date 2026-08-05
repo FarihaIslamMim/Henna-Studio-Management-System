@@ -16,8 +16,17 @@ if(isset($_POST['submit'])){
     $experience_years = $_POST['experience_years'];
     $joining_date = $_POST['joining_date'];
     $status = $_POST['status'];
+    if(!preg_match('/^(13|14|15|16|17|18|19)[0-9]{8}$/', $phone)){
 
+    echo "<script>
+    alert('Enter a valid Bangladeshi mobile number.');
+    </script>";
 
+    exit();
+
+}
+
+$phone = "+880".$phone;
 
     if(!validateName($name)){
 

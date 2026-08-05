@@ -2,26 +2,91 @@
 
 include 'db_connect.php';
 
+$artists = mysqli_query($conn,
+"SELECT Artist_ID, Name FROM artists
+WHERE Status='Active'
+ORDER BY Name");
+
+$designs = mysqli_query($conn,
+
+"SELECT
+Design_ID,
+Design_Code,
+Category,
+Image
+
+FROM designs
+
+WHERE Availability='Available'
+
+ORDER BY Category, Design_Code");
+
+$selected_design = 0;
+
+if(isset($_POST['design_id'])){
+    $selected_design = intval($_POST['design_id']);
+}
+elseif(isset($_GET['design_id'])){
+    $selected_design = intval($_GET['design_id']);
+}
+
 
 if(isset($_POST['submit'])){
 
 
-$customer_id = intval($_POST['customer_id']);
+$name = trim($_POST['name']);
+$phone = trim($_POST['phone']);
+$email = trim($_POST['email']);
+$address = trim($_POST['address']);
 $artist_id = intval($_POST['artist_id']);
 $design_id = intval($_POST['design_id']);
+if($design_id <= 0){
+
+    echo "<script>
+    alert('Please select a design before booking');
+    window.location='bookings.php';
+    </script>";
+
+    exit();
+
+}
 
 $booking_date = $_POST['booking_date'];
 $booking_time = $_POST['booking_time'];
 
-$status = $_POST['status'];
+$status = "PENDING";
 
 $allowed_status = ["CONFIRMED","PENDING","CANCELLED"];
+if(!preg_match('/^(13|14|15|16|17|18|19)[0-9]{8}$/', $phone)){
 
+    echo "<script>
+    alert('Enter a valid Bangladeshi mobile number.');
+    window.location='bookings.php';
+    </script>";
 
+    exit();
 
-if($customer_id <=0 || $artist_id<=0 || $design_id<=0){
+}
 
-echo "<script>alert('Invalid ID information');</script>";
+$phone = "+880".$phone;
+
+if($artist_id<=0){
+
+echo "<script>
+alert('Please select an artist');
+</script>";
+
+exit();
+
+}
+
+elseif($design_id<=0){
+
+echo "<script>
+alert('Please select a design');
+</script>";
+
+exit();
 
 }
 
@@ -53,19 +118,54 @@ echo "<script>alert('Booking time must be between 9 AM and 9 PM');</script>";
 else{
 
 
-// Check customer
+// Check if customer already exists
 
-$stmt=$conn->prepare(
-
-"SELECT Customer_ID FROM customers WHERE Customer_ID=?"
-
+$stmt = $conn->prepare(
+"SELECT Customer_ID
+FROM customers
+WHERE Phone=?"
 );
 
-$stmt->bind_param("i",$customer_id);
+$stmt->bind_param("s",$phone);
 
 $stmt->execute();
 
-$customer=$stmt->get_result();
+$customer = $stmt->get_result();
+
+if($customer->num_rows > 0){
+
+    $customer = $customer->fetch_assoc();
+
+    $customer_id = $customer['Customer_ID'];
+
+}
+else{
+
+    $stmt = $conn->prepare(
+
+    "INSERT INTO customers
+    (Name,Phone,Email,Address)
+
+    VALUES(?,?,?,?)"
+
+    );
+
+    $stmt->bind_param(
+
+    "ssss",
+
+    $name,
+    $phone,
+    $email,
+    $address
+
+    );
+
+    $stmt->execute();
+
+    $customer_id = $conn->insert_id;
+
+}
 
 
 
@@ -103,13 +203,7 @@ $design=$stmt->get_result();
 
 
 
-if($customer->num_rows==0){
-
-echo "<script>alert('Customer does not exist');</script>";
-
-}
-
-elseif($artist->num_rows==0){
+if($artist->num_rows==0){
 
 echo "<script>alert('Artist does not exist or inactive');</script>";
 
@@ -120,7 +214,6 @@ elseif($design->num_rows==0){
 echo "<script>alert('Design unavailable');</script>";
 
 }
-
 
 else{
 
@@ -200,9 +293,7 @@ if($stmt->execute()){
 
 echo "<script>
 
-alert('Booking added successfully');
-
-window.location='view_bookings.php';
+window.location='booking_success.php';
 
 </script>";
 
@@ -255,20 +346,22 @@ echo "<script>alert('Booking failed');</script>";
 
 <nav class="bg-amber-800 shadow-lg">
 
-<div class="max-w-7xl mx-auto px-6 py-4 flex justify-between">
+<div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
 
 <h1 class="text-white text-2xl font-bold">
-Henna Studio
+Henna Studio Booking
 </h1>
 
+<div class="flex gap-3">
 
-<a href="admin_login.php"
-class="text-white">
+<a href="index.php"
+class="bg-white text-amber-800 px-4 py-2 rounded-lg hover:bg-gray-100">
 
-Admin
+← Back to Home
 
 </a>
 
+</div>
 
 </div>
 
@@ -276,88 +369,216 @@ Admin
 
 
 
-<div class="max-w-2xl mx-auto mt-10 bg-white p-8 rounded-2xl shadow-xl">
+<div class="max-w-6xl mx-auto mt-10 bg-white rounded-3xl shadow-2xl overflow-hidden">
 
 
-<h1 class="text-4xl font-bold text-center text-amber-900 mb-6">
+<div class="grid md:grid-cols-2">
 
-Booking Form
+<div class="bg-amber-100 p-8 flex flex-col justify-center">
+
+<h1 class="text-5xl font-bold text-amber-900 mb-3">
+
+Book Your Mehndi
 
 </h1>
 
+<p class="text-gray-700 text-lg">
 
+Choose your favourite design, artist and booking time.
+
+</p>
+
+<div class="mt-10 bg-gradient-to-br from-amber-700 to-orange-500 rounded-2xl p-8 text-white shadow-xl">
+
+    <h3 class="text-3xl font-bold mb-4">
+        Henna Studio
+    </h3>
+
+    <p class="text-lg leading-8">
+        ✦ Professional Mehndi Artists<br>
+        ✦ Bridal & Party Designs<br>
+        ✦ Affordable Packages<br>
+        ✦ Easy Online Booking
+    </p>
+
+</div>
+</div>
+
+<div class="p-8">
+
+<h2 class="text-3xl font-bold text-center text-amber-900 mb-6">
+
+Booking Form
+
+</h2>
 
 <form method="POST" class="space-y-5">
 
 
 
-<input type="number"
-name="customer_id"
-placeholder="Customer ID"
-min="1"
+<label class="font-semibold text-gray-700 mb-1 block">
+
+Name
+
+</label>
+
+<input
+type="text"
+name="name"
 required
-class="w-full border p-3 rounded-lg">
+class="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+
+<label class="font-semibold text-gray-700 mb-1 block">
+
+Phone Number
+
+</label>
+
+<div class="flex">
+
+<span class="bg-gray-100 border border-r-0 rounded-l-lg px-4 py-3">
++880
+</span>
+
+<input
+type="text"
+name="phone"
+placeholder="1712345678"
+maxlength="10"
+required
+class="w-full border rounded-r-lg p-3">
+
+</div>
+
+<label class="font-semibold text-gray-700 mb-1 block">
+
+Email
+
+</label>
+
+<input
+type="email"
+name="email"
+required
+class="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+
+<label class="font-semibold text-gray-700 mb-1 block">
+
+Address
+
+</label>
+
+<input
+type="text"
+name="address"
+class="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
 
 
 
-<input type="number"
+<label class="font-semibold text-gray-700 mb-1 block">
+
+Artist
+
+</label>
+
+<select
 name="artist_id"
-placeholder="Artist ID"
-min="1"
 required
-class="w-full border p-3 rounded-lg">
+class="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+
+<option value="">Select Artist</option>
+
+<?php while($artist=mysqli_fetch_assoc($artists)){ ?>
+
+<option value="<?php echo $artist['Artist_ID']; ?>">
+
+<?php echo $artist['Name']; ?>
+
+</option>
+
+<?php } ?>
+
+</select>
 
 
 
-<input type="number"
+<label class="font-semibold text-gray-700 mb-1 block">
+
+Select Design
+
+</label>
+
+<select
 name="design_id"
-placeholder="Design ID"
-min="1"
+id="designSelect"
 required
-class="w-full border p-3 rounded-lg">
+class="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+
+<option value="">Select Design</option>
+
+<?php while($d = mysqli_fetch_assoc($designs)){ ?>
+
+<option
+value="<?php echo $d['Design_ID']; ?>"
+
+<?php
+if($selected_design == $d['Design_ID']){
+    echo "selected";
+}
+?>
+
+data-category="<?php echo htmlspecialchars($d['Category']); ?>"
+data-code="<?php echo htmlspecialchars($d['Design_Code']); ?>"
+data-image="<?php echo htmlspecialchars($d['Image']); ?>">
+
+<?php echo htmlspecialchars($d['Category']); ?>
+
+-
+
+<?php echo htmlspecialchars($d['Design_Code']); ?>
+
+</option>
+
+<?php } ?>
+
+</select>
+<div id="designPreview" class="hidden mt-5 bg-orange-100 border rounded-lg p-4">
+
+<h3 class="font-bold text-lg text-amber-900">
+
+<span id="previewCategory"></span>
+
+-
+
+<span id="previewCode"></span>
+
+</h3>
 
 
+<img 
+id="previewImage"
+src=""
+class="mt-4 w-64 rounded-xl shadow-lg">
+
+</div>
 
 <input type="date"
 name="booking_date"
 min="<?php echo date('Y-m-d');?>"
 required
-class="w-full border p-3 rounded-lg">
+class="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
 
 
 
 <input type="time"
 name="booking_time"
 required
-class="w-full border p-3 rounded-lg">
+class="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
 
 
-
-<select name="status"
-class="w-full border p-3 rounded-lg">
-
-
-<option value="PENDING">
-PENDING
-</option>
-
-
-<option value="CONFIRMED">
-CONFIRMED
-</option>
-
-
-<option value="CANCELLED">
-CANCELLED
-</option>
-
-
-</select>
-
-
-
-<button name="submit"
-class="bg-amber-700 text-white px-6 py-3 rounded-lg">
+<button
+name="submit"
+class="w-full bg-amber-700 hover:bg-amber-800 text-white text-lg font-semibold py-4 rounded-xl transition duration-300 shadow-lg">
 
 Save Booking
 
@@ -367,10 +588,52 @@ Save Booking
 
 </form>
 
+</div>
 
 </div>
 
+</div>
 
+<script>
+
+const designSelect = document.getElementById("designSelect");
+
+const preview = document.getElementById("designPreview");
+
+const previewCategory = document.getElementById("previewCategory");
+
+const previewCode = document.getElementById("previewCode");
+
+const previewImage = document.getElementById("previewImage");
+
+function updatePreview(){
+
+    let selected = designSelect.options[designSelect.selectedIndex];
+
+    if(designSelect.value==""){
+
+        preview.classList.add("hidden");
+        return;
+
+    }
+
+    preview.classList.remove("hidden");
+
+    previewCategory.textContent = selected.dataset.category;
+
+    previewCode.textContent = selected.dataset.code;
+
+    previewImage.src = "images/" + selected.dataset.image;
+
+}
+
+designSelect.addEventListener("change", updatePreview);
+
+// THIS IS THE IMPORTANT LINE
+updatePreview();
+
+
+</script>
 </body>
 
 </html>
