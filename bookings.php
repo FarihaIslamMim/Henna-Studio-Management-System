@@ -13,21 +13,21 @@ $designs = mysqli_query($conn,
 Design_ID,
 Design_Code,
 Category,
-Image
-
+Image,
+Price
 FROM designs
 
 WHERE Availability='Available'
 
 ORDER BY Category, Design_Code");
 
-$selected_design = 0;
+$selected_design = "";
 
 if(isset($_POST['design_id'])){
-    $selected_design = intval($_POST['design_id']);
+    $selected_design = $_POST['design_id'];
 }
 elseif(isset($_GET['design_id'])){
-    $selected_design = intval($_GET['design_id']);
+    $selected_design = $_GET['design_id'];
 }
 
 
@@ -39,8 +39,9 @@ $phone = trim($_POST['phone']);
 $email = trim($_POST['email']);
 $address = trim($_POST['address']);
 $artist_id = intval($_POST['artist_id']);
-$design_id = intval($_POST['design_id']);
-if($design_id <= 0){
+$selected_design = $_POST['design_id'];
+$design_id = ($selected_design === "CUSTOM") ? null : intval($selected_design);
+if($selected_design == ""){
 
     echo "<script>
     alert('Please select a design before booking');
@@ -55,9 +56,10 @@ $booking_date = $_POST['booking_date'];
 $booking_time = $_POST['booking_time'];
 
 $status = "PENDING";
+$payment_option = $_POST['payment_option'];
 
 $allowed_status = ["CONFIRMED","PENDING","CANCELLED"];
-if(!preg_match('/^(13|14|15|16|17|18|19)[0-9]{8}$/', $phone)){
+if(!preg_match('/^1[3-9][0-9]{8}$/', $phone)){
 
     echo "<script>
     alert('Enter a valid Bangladeshi mobile number.');
@@ -79,17 +81,6 @@ alert('Please select an artist');
 exit();
 
 }
-
-elseif($design_id<=0){
-
-echo "<script>
-alert('Please select a design');
-</script>";
-
-exit();
-
-}
-
 
 elseif(!in_array($status,$allowed_status)){
 
@@ -123,7 +114,8 @@ else{
 $stmt = $conn->prepare(
 "SELECT Customer_ID
 FROM customers
-WHERE Phone=?"
+WHERE Phone=?
+AND Status='Active'"
 );
 
 $stmt->bind_param("s",$phone);
@@ -132,14 +124,11 @@ $stmt->execute();
 
 $customer = $stmt->get_result();
 
-if($customer->num_rows > 0){
+if($customer->num_rows){
 
-    $customer = $customer->fetch_assoc();
+    $customer_id = $customer->fetch_assoc()['Customer_ID'];
 
-    $customer_id = $customer['Customer_ID'];
-
-}
-else{
+}else{
 
     $stmt = $conn->prepare(
 
@@ -185,33 +174,33 @@ $stmt->execute();
 $artist=$stmt->get_result();
 
 
+// Check design availability only if normal design selected
 
-// Check design available
+if($design_id !== null){
 
-$stmt=$conn->prepare(
+    $stmt=$conn->prepare(
+    "SELECT Design_ID FROM designs
+     WHERE Design_ID=? AND Availability='Available'"
+    );
 
-"SELECT Design_ID FROM designs
- WHERE Design_ID=? AND Availability='Available'"
+    $stmt->bind_param("i",$design_id);
 
-);
+    $stmt->execute();
 
-$stmt->bind_param("i",$design_id);
-
-$stmt->execute();
-
-$design=$stmt->get_result();
-
-
-
-if($artist->num_rows==0){
-
-echo "<script>alert('Artist does not exist or inactive');</script>";
+    $design=$stmt->get_result();
 
 }
 
-elseif($design->num_rows==0){
 
-echo "<script>alert('Design unavailable');</script>";
+
+if(!$artist->num_rows){
+
+    echo "<script>alert('Artist does not exist or inactive');</script>";
+
+}
+elseif($design_id !== null && !$design->num_rows){
+
+    echo "<script>alert('Design unavailable');</script>";
 
 }
 
@@ -250,53 +239,89 @@ $duplicate=$stmt->get_result();
 
 
 
-if($duplicate->num_rows>0){
+if($duplicate->num_rows){
+
+    echo "<script>alert('Artist already booked at this time');</script>";
+
+}else{
 
 
-echo "<script>alert('Artist already booked at this time');</script>";
+$payment_option = $_POST['payment_option'];
 
 
-}
-
-
-else{
-
+if($design_id === null){
 
 $stmt=$conn->prepare(
 
 "INSERT INTO bookings
+(Customer_ID,Artist_ID,Design_ID,Booking_Date,Booking_Time,Status,Payment_Option)
 
-(Customer_ID,Artist_ID,Design_ID,Booking_Date,Booking_Time,Status)
-
-VALUES(?,?,?,?,?,?)"
+VALUES(?,?,NULL,?,?,?,?)"
 
 );
-
 
 $stmt->bind_param(
 
-"iiisss",
+"iissss",
 
 $customer_id,
 $artist_id,
-$design_id,
 $booking_date,
 $booking_time,
-$status
+$status,
+$payment_option
 
 );
 
+}
+else{
 
+
+    $stmt=$conn->prepare(
+
+    "INSERT INTO bookings
+    (Customer_ID,Artist_ID,Design_ID,Booking_Date,Booking_Time,Status,Payment_Option)
+
+    VALUES(?,?,?,?,?,?,?)"
+
+    );
+
+
+    $stmt->bind_param(
+
+    "iiissss",
+
+    $customer_id,
+    $artist_id,
+    $design_id,
+    $booking_date,
+    $booking_time,
+    $status,
+    $payment_option
+
+    );
+
+
+}
 
 if($stmt->execute()){
 
+    $booking_id = $conn->insert_id;
 
-echo "<script>
+    if($payment_option == "Now"){
 
-window.location='booking_success.php';
+        echo "<script>
+        window.location='customer_payment.php?booking_id=$booking_id';
+        </script>";
 
-</script>";
+    }
+    else{
 
+        echo "<script>
+        window.location='booking_success.php';
+        </script>";
+
+    }
 
 }
 
@@ -341,7 +366,7 @@ echo "<script>alert('Booking failed');</script>";
 </head>
 
 
-<body class="bg-orange-50 min-h-screen">
+<body class="bg-[#efe3d2] min-h-screen">
 
 
 <nav class="bg-amber-800 shadow-lg">
@@ -369,18 +394,22 @@ class="bg-white text-amber-800 px-4 py-2 rounded-lg hover:bg-gray-100">
 
 
 
-<div class="max-w-6xl mx-auto mt-10 bg-white rounded-3xl shadow-2xl overflow-hidden">
+<div class="max-w-6xl mx-auto mt-12 bg-white rounded-3xl shadow-xl overflow-hidden border border-[#e8d6bd] p-8">
 
 
-<div class="grid md:grid-cols-2">
+<div class="grid md:grid-cols-2 gap-10">
 
-<div class="bg-amber-100 p-8 flex flex-col justify-center">
 
-<h1 class="text-5xl font-bold text-amber-900 mb-3">
+<!-- LEFT SIDE -->
 
-Book Your Mehndi
+<div class="bg-[#e8d6bd] p-10 rounded-3xl">
+
+<h1 class="text-5xl font-bold text-[#7b451d] mb-4">
+
+Book Your Henna Appointment
 
 </h1>
+
 
 <p class="text-gray-700 text-lg">
 
@@ -388,25 +417,42 @@ Choose your favourite design, artist and booking time.
 
 </p>
 
-<div class="mt-10 bg-gradient-to-br from-amber-700 to-orange-500 rounded-2xl p-8 text-white shadow-xl">
 
-    <h3 class="text-3xl font-bold mb-4">
-        Henna Studio
-    </h3>
+<div class="mt-10 bg-white rounded-2xl p-8 shadow-lg border border-[#dcc3a3]">
 
-    <p class="text-lg leading-8">
-        ✦ Professional Mehndi Artists<br>
-        ✦ Bridal & Party Designs<br>
-        ✦ Affordable Packages<br>
-        ✦ Easy Online Booking
-    </p>
+<h3 class="text-3xl font-bold text-amber-900 mb-4">
+
+Why Choose Us?
+
+</h3>
+
+
+<p class="text-gray-700 leading-8">
+
+✓ Professional Henna Artists<br>
+
+✓ Bridal & Custom Designs<br>
+
+✓ Home Service Available<br>
+
+✓ Easy Online Booking
+
+</p>
+
 
 </div>
+
+
 </div>
 
-<div class="p-8">
 
-<h2 class="text-3xl font-bold text-center text-amber-900 mb-6">
+
+<!-- RIGHT SIDE -->
+
+<div class="p-10 bg-white rounded-3xl">
+
+
+<h2 class="text-3xl font-bold text-center text-[#6btext-amber-9003f1d] mb-8">
 
 Booking Form
 
@@ -426,7 +472,7 @@ Name
 type="text"
 name="name"
 required
-class="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+class="w-full border border-[#d8c2a8] p-3 rounded-xl focus:ring-2 focus:ring-[#8b5e34] focus:outline-none bg-[#fffaf3]">
 
 <label class="font-semibold text-gray-700 mb-1 block">
 
@@ -446,7 +492,7 @@ name="phone"
 placeholder="1712345678"
 maxlength="10"
 required
-class="w-full border rounded-r-lg p-3">
+class="w-full border border-[#d8c2a8] rounded-r-lg p-3 bg-[#fffaf3] focus:ring-2 focus:ring-[#8b5e34]">
 
 </div>
 
@@ -460,7 +506,7 @@ Email
 type="email"
 name="email"
 required
-class="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+class="w-full border border-[#d8c2a8] p-3 rounded-xl focus:ring-2 focus:ring-[#8b5e34] focus:outline-none bg-[#fffaf3]">
 
 <label class="font-semibold text-gray-700 mb-1 block">
 
@@ -471,7 +517,7 @@ Address
 <input
 type="text"
 name="address"
-class="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+class="w-full border border-[#d8c2a8] p-3 rounded-xl focus:ring-2 focus:ring-[#8b5e34] focus:outline-none bg-[#fffaf3]">
 
 
 
@@ -484,7 +530,7 @@ Artist
 <select
 name="artist_id"
 required
-class="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+class="w-full border border-[#d8c2a8] p-3 rounded-xl focus:ring-2 focus:ring-[#8b5e34] focus:outline-none bg-[#fffaf3]">
 
 <option value="">Select Artist</option>
 
@@ -512,14 +558,29 @@ Select Design
 name="design_id"
 id="designSelect"
 required
-class="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+class="w-full border border-[#d8c2a8] p-3 rounded-xl focus:ring-2 focus:ring-[#8b5e34] focus:outline-none bg-[#fffaf3]">
 
-<option value="">Select Design</option>
+<option value="">
+Select Design
+</option>
+
+
+<option
+value="CUSTOM"
+data-category="Custom Design"
+data-code="CUSTOM"
+data-image="">
+
+Custom Design (Show reference to artist)
+
+</option>
+
 
 <?php while($d = mysqli_fetch_assoc($designs)){ ?>
 
 <option
 value="<?php echo $d['Design_ID']; ?>"
+data-price="<?php echo $d['Price']; ?>"
 
 <?php
 if($selected_design == $d['Design_ID']){
@@ -528,8 +589,12 @@ if($selected_design == $d['Design_ID']){
 ?>
 
 data-category="<?php echo htmlspecialchars($d['Category']); ?>"
+
 data-code="<?php echo htmlspecialchars($d['Design_Code']); ?>"
-data-image="<?php echo htmlspecialchars($d['Image']); ?>">
+
+data-image="<?php echo htmlspecialchars($d['Image']); ?>"
+
+>
 
 <?php echo htmlspecialchars($d['Category']); ?>
 
@@ -539,12 +604,29 @@ data-image="<?php echo htmlspecialchars($d['Image']); ?>">
 
 </option>
 
+
 <?php } ?>
 
-</select>
-<div id="designPreview" class="hidden mt-5 bg-orange-100 border rounded-lg p-4">
 
-<h3 class="font-bold text-lg text-amber-900">
+</select>
+
+<div class="mt-4 bg-yellow-50 p-4 rounded-lg">
+
+<p class="font-bold text-amber-900">
+
+Design Price:
+
+<span id="designPrice">
+Select a design
+</span>
+
+</p>
+
+</div>
+
+<div id="designPreview" class="hidden mt-5 bg-[#f6ead8] border border-[#dcc3a3] rounded-xl p-5">
+
+<h3 class="font-bold text-lg text-[#6b3f1d]">
 
 <span id="previewCategory"></span>
 
@@ -558,7 +640,7 @@ data-image="<?php echo htmlspecialchars($d['Image']); ?>">
 <img 
 id="previewImage"
 src=""
-class="mt-4 w-64 rounded-xl shadow-lg">
+class="mt-4 w-72 h-72 object-cover rounded-xl shadow-lg hidden">
 
 </div>
 
@@ -566,19 +648,33 @@ class="mt-4 w-64 rounded-xl shadow-lg">
 name="booking_date"
 min="<?php echo date('Y-m-d');?>"
 required
-class="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
-
-
-
+class="w-full border border-[#d8c2a8] p-3 rounded-xl focus:ring-2 focus:ring-[#8b5e34] focus:outline-none bg-[#fffaf3] mb-3">
 <input type="time"
 name="booking_time"
 required
-class="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+class="w-full border border-[#d8c2a8] p-3 rounded-xl focus:ring-2 focus:ring-[#8b5e34] focus:outline-none bg-[#fffaf3] mb-3">
 
+<label class="font-semibold">
+Payment Option
+</label>
+
+
+<select name="payment_option"
+class="w-full border p-3 rounded-lg">
+
+<option value="Later">
+Pay after service
+</option>
+
+<option value="Now">
+Pay now
+</option>
+
+</select>
 
 <button
 name="submit"
-class="w-full bg-amber-700 hover:bg-amber-800 text-white text-lg font-semibold py-4 rounded-xl transition duration-300 shadow-lg">
+class="w-full bg-amber-700 hover:bg-amber-800 text-white text-lg font-semibold py-4 rounded-full transition duration-300 shadow-lg">
 
 Save Booking
 
@@ -619,15 +715,63 @@ function updatePreview(){
 
     preview.classList.remove("hidden");
 
-    previewCategory.textContent = selected.dataset.category;
+previewCategory.textContent = selected.dataset.category;
 
-    previewCode.textContent = selected.dataset.code;
+previewCode.textContent = selected.dataset.code;
 
+
+if(selected.dataset.code == "CUSTOM"){
+
+    previewCategory.textContent = "Custom Design";
+    previewCode.textContent = "Bring your own reference";
+    previewImage.classList.add("hidden");
+
+}
+else{
+
+    previewImage.classList.remove("hidden");
+
+    previewImage.style.display = selected.dataset.image ? "block" : "none";
+
+if(selected.dataset.image){
     previewImage.src = "images/" + selected.dataset.image;
+}
+
+}
 
 }
 
 designSelect.addEventListener("change", updatePreview);
+const paymentOption = document.querySelector("select[name='payment_option']");
+
+designSelect.addEventListener("change",function(){
+
+let selected = this.options[this.selectedIndex];
+
+let price = selected.dataset.price;
+
+
+if(price){
+
+document.getElementById("designPrice").innerHTML =
+"৳ " + price;
+
+paymentOption.disabled = false;
+
+}
+
+else{
+
+document.getElementById("designPrice").innerHTML =
+"Custom Design (Pay after service only)";
+
+paymentOption.value = "Later";
+
+paymentOption.disabled = true;
+
+}
+
+});
 
 // THIS IS THE IMPORTANT LINE
 updatePreview();

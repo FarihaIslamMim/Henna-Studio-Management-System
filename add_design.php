@@ -328,7 +328,6 @@ class="w-full border p-3 rounded">
 <option value="Modern">Modern</option>
 <option value="Stylish">Stylish</option>
 
-
 </select>
 
 </div>

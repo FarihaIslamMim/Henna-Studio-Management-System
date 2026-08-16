@@ -117,29 +117,32 @@ $phone = "+880".$phone;
 
 
 
-            $stmt = $conn->prepare(
+            $status = "Active";
 
-                "INSERT INTO customers
-                (Name, Phone, Email, Password, Address, Registration_Date)
+$stmt = $conn->prepare(
 
-                VALUES(?,?,?,?,?,?)"
+"INSERT INTO customers
+(Name, Phone, Email, Password, Address, Registration_Date, Status)
 
-            );
+VALUES(?,?,?,?,?,?,?)"
+
+);
 
 
 
             $stmt->bind_param(
 
-                "ssssss",
+"sssssss",
 
-                $name,
-                $phone,
-                $email,
-                $hashed_password,
-                $address,
-                $registration_date
+$name,
+$phone,
+$email,
+$hashed_password,
+$address,
+$registration_date,
+$status
 
-            );
+);
 
 
 
@@ -442,7 +445,7 @@ Clear
 </div>
 
 
-<form>
+</form>
 
 
 </div>

@@ -15,14 +15,10 @@ if(isset($_POST['submit'])){
 
     $payment_status = trim($_POST['payment_status']);
 
-
-
     $allowed_methods = [
-        "Cash",
-        "Bkash",
-        "Nagad"
-    ];
-
+    "Bkash",
+    "Nagad"
+];
 
     $allowed_status = [
         "Paid",

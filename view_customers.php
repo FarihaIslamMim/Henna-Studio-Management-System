@@ -24,9 +24,8 @@ if(isset($_GET['search']) && $_GET['search'] != ""){
     $stmt = $conn->prepare(
 
         "SELECT * FROM customers
-         WHERE Name LIKE ?
-         OR Phone LIKE ?
-         OR Email LIKE ?"
+         WHERE Status='Active'
+         AND (Name LIKE ? OR Phone LIKE ? OR Email LIKE ?)"
 
     );
 
@@ -60,7 +59,9 @@ else{
 
         $conn,
 
-        "SELECT * FROM customers ORDER BY Customer_ID ASC"
+        "SELECT * FROM customers 
+         WHERE Status='Active'
+         ORDER BY Customer_ID ASC"
 
     );
 
@@ -73,7 +74,9 @@ $count_result = mysqli_query(
 
     $conn,
 
-    "SELECT COUNT(*) AS total FROM customers"
+    "SELECT COUNT(*) AS total 
+     FROM customers
+     WHERE Status='Active'"
 
 );
 
@@ -110,20 +113,30 @@ $count = mysqli_fetch_assoc($count_result);
 
 
 <h1 class="text-white text-2xl font-bold">
-
 Customer Management
-
 </h1>
 
 
-<div class="flex gap-3">
+<div class="flex gap-4 ml-auto">
+
+
+<a href="inactive_customers.php"
+
+class="bg-white text-amber-800 px-5 py-2 rounded-lg">
+
+View Inactive Customers
+
+</a>
+
 
 <a href="admin_dashboard.php"
-class="bg-white text-amber-800 px-4 py-2 rounded-lg hover:bg-gray-100 font-semibold">
+
+class="bg-white text-amber-800 px-5 py-2 rounded-lg">
 
 ← Back to Dashboard
 
 </a>
+
 
 </div>
 
@@ -295,11 +308,10 @@ Edit
 
 
 
-<a href="delete_customer.php?id=<?php echo $row['Customer_ID']; ?>"
-
-onclick="return confirm('Delete this customer?')"
-
-class="text-red-600 font-semibold ml-4">
+<a 
+href="delete_customer.php?id=<?php echo $row['Customer_ID']; ?>"
+onclick="return confirm('Are you sure you want to delete this customer?');"
+class="text-red-600">
 
 Delete
 

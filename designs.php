@@ -44,7 +44,7 @@ ORDER BY Design_ID ASC"
         $keyword
 
     );
-    
+
     $stmt->execute();
 
     $result = $stmt->get_result();
@@ -99,25 +99,46 @@ $count = mysqli_fetch_assoc($count_result);
 
 </head>
 
-<body class="bg-orange-50 min-h-screen">
-
+<body class="bg-[#f5efe6] min-h-screen">
 
 <nav class="bg-amber-800 shadow-lg">
 
-<div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+<div class="max-w-7xl mx-auto px-8 py-5 flex justify-between items-center">
 
-<h1 class="text-white text-2xl font-bold">
 
-Henna Studio Designs
-
+<h1 class="text-2xl font-bold text-white">
+Henna Studio
 </h1>
 
+
+<div class="flex gap-8 text-white font-semibold">
+
 <a href="index.php"
-class="bg-white text-amber-800 px-4 py-2 rounded-lg hover:bg-gray-100 font-semibold">
-
-← Back to Home
-
+class="hover:text-yellow-200 transition">
+Home
 </a>
+
+
+<a href="designs.php"
+class="hover:text-yellow-200 transition">
+Designs
+</a>
+
+
+<a href="bookings.php"
+class="hover:text-yellow-200 transition">
+Book Appointment
+</a>
+
+
+<a href="admin_login.php"
+class="hover:text-yellow-200 transition">
+Admin Login
+</a>
+
+
+</div>
+
 
 </div>
 
@@ -125,9 +146,7 @@ class="bg-white text-amber-800 px-4 py-2 rounded-lg hover:bg-gray-100 font-semib
 
 <div class="max-w-7xl mx-auto mt-10 px-6">
 
-
-
-<div class="text-center mb-8">
+<div class="text-center mb-12">
 
 
 <h1 class="text-5xl font-bold text-amber-900">
@@ -137,18 +156,22 @@ Our Henna Collection
 </h1>
 
 
-<p class="text-gray-600 mt-3">
+<p class="text-gray-600 mt-4 text-lg">
 
-Choose from our beautiful henna designs or bring your own design inspiration.
+Explore elegant bridal, Arabic, floral and modern henna designs.
 
 </p>
 
 
-<div class="mt-4 bg-white inline-block px-5 py-3 rounded-lg shadow">
+<div class="mt-6 inline-flex bg-white shadow-md px-8 py-4 rounded-full">
+
+<span class="text-gray-700">
 
 Available Designs:
 
-<span class="font-bold text-amber-800">
+</span>
+
+<span class="ml-2 font-bold text-amber-800">
 
 <?php echo $count['total']; ?>
 
@@ -159,12 +182,7 @@ Available Designs:
 
 </div>
 
-
-
-
-
-
-<form method="GET" class="flex justify-center gap-3 mb-10">
+<form method="GET" class="flex justify-center gap-3 mb-12">
 
 
 <input
@@ -177,25 +195,23 @@ value="<?php echo htmlspecialchars($search); ?>"
 
 placeholder="Search design code or category"
 
-class="border p-3 rounded-lg w-96">
-
+class="w-96 px-5 py-3 rounded-full border border-gray-300 shadow-sm focus:ring-2 focus:ring-amber-600 focus:outline-none">
 
 
 <button
 
 type="submit"
 
-class="bg-amber-700 text-white px-6 rounded-lg">
+class="bg-amber-800 text-white px-8 rounded-full hover:bg-amber-900">
 
 Search
 
 </button>
 
 
-
 <a href="designs.php"
 
-class="bg-gray-500 text-white px-5 py-3 rounded-lg">
+class="bg-white border px-6 py-3 rounded-full hover:bg-gray-100">
 
 Reset
 
@@ -203,66 +219,58 @@ Reset
 
 
 </form>
-
-
-
 <?php if(mysqli_num_rows($result) > 0){ ?>
 
 <div class="flex flex-wrap justify-center gap-3 mb-8">
 
 
 <a href="designs.php"
-class="bg-amber-700 text-white px-4 py-2 rounded">
+class="bg-white text-amber-800 border border-amber-700 px-5 py-2 rounded-full hover:bg-amber-800 hover:text-white transition>
 All
 </a>
 
 
 <a href="designs.php?category=Bridal"
-class="bg-amber-700 text-white px-4 py-2 rounded">
+class="bg-white text-amber-800 border border-amber-700 px-5 py-2 rounded-full hover:bg-amber-800 hover:text-white transition">
 Bridal
 </a>
 
 
 <a href="designs.php?category=Arabic"
-class="bg-amber-700 text-white px-4 py-2 rounded">
+class="bg-white text-amber-800 border border-amber-700 px-5 py-2 rounded-full hover:bg-amber-800 hover:text-white transition">
 Arabic
 </a>
 
 
 <a href="designs.php?category=Modern"
-class="bg-amber-700 text-white px-4 py-2 rounded">
+class="bg-white text-amber-800 border border-amber-700 px-5 py-2 rounded-full hover:bg-amber-800 hover:text-white transition">
 Modern
 </a>
 
 
 <a href="designs.php?category=Stylish"
-class="bg-amber-700 text-white px-4 py-2 rounded">
+class="bg-white text-amber-800 border border-amber-700 px-5 py-2 rounded-full hover:bg-amber-800 hover:text-white transition">
 Stylish
 </a>
 
 
 <a href="designs.php?category=Floral"
-class="bg-amber-700 text-white px-4 py-2 rounded">
+class="bg-white text-amber-800 border border-amber-700 px-5 py-2 rounded-full hover:bg-amber-800 hover:text-white transition">
 Floral
 </a>
 
 
 </div>
 
-<div class="grid md:grid-cols-3 gap-8">
-
+<div class="grid md:grid-cols-3 gap-8 items-start">
 
 <?php while($row = mysqli_fetch_assoc($result)){ ?>
 
-
-
-<div class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition">
-
-
+<div class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition">
 
 <?php
 
-$image = "images/Simple Henna.jpeg";
+$image = "";
 
 if(!empty($row['Image'])){
     $image = "images/" . $row['Image'];
@@ -270,25 +278,17 @@ if(!empty($row['Image'])){
 
 ?>
 
-
-
 <img
 
 src="<?php echo htmlspecialchars($image); ?>"
 
-class="w-full h-72 object-cover cursor-pointer"
+class="w-full h-80 object-cover cursor-pointer"
 
 onclick="openImage('<?php echo htmlspecialchars($image); ?>')"
 
-onerror="this.src='images/Simple Henna.jpeg';">
-
-
-
-
+onerror="this.style.display='none';">
 
 <div class="p-6">
-
-
 
 <h2 class="text-2xl font-bold text-amber-800">
 
@@ -312,11 +312,12 @@ Design Code: <?php echo htmlspecialchars($row['Design_Code']); ?>
 
 
 
-<p class="mt-2">
+<p class="mt-3 text-lg font-semibold text-amber-900">
 
-<strong>Price:</strong>
-
+Price:
+<span class="text-amber-700">
 ৳<?php echo htmlspecialchars($row['Price']); ?>
+</span>
 
 </p>
 
@@ -346,7 +347,7 @@ Design Code: <?php echo htmlspecialchars($row['Design_Code']); ?>
 
 <button
 
-class="mt-5 w-full bg-amber-700 text-white py-3 rounded-lg hover:bg-amber-900">
+class="mt-6 w-full bg-amber-800 text-white py-3 rounded-full hover:bg-amber-900 transition font-semibold">
 
 
 Book Now

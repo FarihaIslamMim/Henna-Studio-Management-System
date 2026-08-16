@@ -7,6 +7,7 @@ if(!isset($_GET['id'])){
 }
 
 $id = intval($_GET['id']);
+$from = $_GET['from'] ?? 'admin';
 
 $stmt = $conn->prepare(
 
@@ -31,7 +32,7 @@ ON payments.Booking_ID = bookings.Booking_ID
 JOIN customers
 ON bookings.Customer_ID = customers.Customer_ID
 
-JOIN designs
+LEFT JOIN designs
 ON bookings.Design_ID = designs.Design_ID
 
 WHERE payments.Payment_ID=?"
@@ -87,7 +88,9 @@ Henna Studio Receipt
 
 <p><b>Email:</b> <?php echo $row['Email']; ?></p>
 
-<p><b>Design:</b> <?php echo $row['Design_Code']; ?></p>
+<p><b>Design:</b> 
+<?php echo $row['Design_Code'] ?? 'Custom Design'; ?>
+</p>
 
 <p><b>Date:</b> <?php echo $row['Booking_Date']; ?></p>
 
@@ -111,12 +114,25 @@ Print Receipt
 
 </button>
 
+<?php if($from == "customer"){ ?>
+
+<a href="booking_history.php"
+class="bg-amber-700 text-white px-5 py-2 rounded">
+
+View My Bookings
+
+</a>
+
+<?php } else { ?>
+
 <a href="view_payments.php"
 class="bg-amber-700 text-white px-5 py-2 rounded">
 
 Back
 
 </a>
+
+<?php } ?>
 
 </div>
 

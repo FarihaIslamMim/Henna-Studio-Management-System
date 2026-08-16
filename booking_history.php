@@ -19,7 +19,7 @@ if(isset($_POST['search'])){
     JOIN customers
     ON bookings.Customer_ID = customers.Customer_ID
 
-    JOIN designs
+    LEFT JOIN designs
     ON bookings.Design_ID = designs.Design_ID
 
     JOIN artists
@@ -159,7 +159,7 @@ while($row = $result->fetch_assoc()){
 
 <td class="p-4">
 
-<?php echo htmlspecialchars($row['Design_Code']); ?>
+<?php echo htmlspecialchars($row['Design_Code'] ?? 'Custom Design'); ?>
 
 </td>
 
@@ -184,14 +184,19 @@ while($row = $result->fetch_assoc()){
 <td class="p-4">
 
 <?php
-if($row['Status']=="CONFIRMED"){
+$status = strtoupper($row['Status']);
+
+if($status=="CONFIRMED"){
     echo "<span class='bg-green-100 text-green-700 px-3 py-1 rounded-full font-semibold'>Confirmed</span>";
 }
-elseif($row['Status']=="PENDING"){
+elseif($status=="PENDING"){
     echo "<span class='bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-semibold'>Pending</span>";
 }
-else{
+elseif($status=="CANCELLED"){
     echo "<span class='bg-red-100 text-red-700 px-3 py-1 rounded-full font-semibold'>Cancelled</span>";
+}
+else{
+    echo "<span class='bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-semibold'>Unknown</span>";
 }
 ?>
 
