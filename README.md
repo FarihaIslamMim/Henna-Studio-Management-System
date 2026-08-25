@@ -56,98 +56,34 @@ The system also supports **custom design bookings**, where the design price is d
 
 **Development Environment**
 
-`XAMPP` · `phpMyAdmin`
+`XAMPP` · `phpMyAdmin`  
+
+## ▶ How to Run
+
+1. Install and open **XAMPP**.
+2. Start **Apache** and **MySQL** from the XAMPP Control Panel.
+3. Place the project folder inside:
+   `C:\xampp\htdocs\`
+4. Open **phpMyAdmin** and create/import the project database.
+5. Open the website in a browser using:
+   `http://localhost/<project-folder>/`
+6. Use the **Admin Login** option to access the administrative panel.
+
+> The system runs locally through XAMPP and uses PHP with MySQL/MariaDB.
 
 ## 🗄️ Database Structure
 
-The system uses a relational database with seven interconnected tables.
+The system uses seven relational tables:
 
-### 🔐 Admin
-
-| Column | Type | Constraints |
-|---|---|---|
-| Admin_ID | INT(11) | PRIMARY KEY, AUTO_INCREMENT |
-| Username | VARCHAR(50) | NOT NULL |
-| Password | VARCHAR(255) | NOT NULL |
-| Email | VARCHAR(100) | NULL |
-| reset_token | VARCHAR(255) | NULL |
-| token_expiry | DATETIME | NULL |
-
-### 👤 Artists
-
-| Column | Type | Constraints |
-|---|---|---|
-| Artist_ID | INT(11) | PRIMARY KEY, AUTO_INCREMENT |
-| Name | VARCHAR(100) | NOT NULL |
-| Phone | VARCHAR(15) | NOT NULL, UNIQUE |
-| Email | VARCHAR(100) | NULL, UNIQUE |
-| User_Password | VARCHAR(255) | NOT NULL |
-| Address | VARCHAR(255) | NULL |
-| Specialization | VARCHAR(100) | NULL, CHECK |
-| Experience_Years | INT(11) | NULL, CHECK (>= 0) |
-| Joining_Date | DATE | DEFAULT CURRENT_DATE |
-| Status | VARCHAR(20) | DEFAULT 'Active' |
-
-### 👥 Customers
-
-| Column | Type | Constraints |
-|---|---|---|
-| Customer_ID | INT(11) | PRIMARY KEY, AUTO_INCREMENT |
-| Name | VARCHAR(100) | NOT NULL |
-| Phone | VARCHAR(15) | NULL, UNIQUE |
-| Email | VARCHAR(100) | NULL |
-| Password | VARCHAR(255) | NOT NULL |
-| Address | VARCHAR(255) | NULL |
-| Registration_Date | DATE | DEFAULT CURRENT_DATE |
-| Status | ENUM('Active','Inactive') | DEFAULT 'Active' |
-
-### 🎨 Designs
-
-| Column | Type | Constraints |
-|---|---|---|
-| Design_ID | INT(11) | PRIMARY KEY, AUTO_INCREMENT |
-| Design_Code | VARCHAR(20) | NOT NULL |
-| Category | VARCHAR(50) | NULL, CHECK |
-| Price | DECIMAL(10,2) | NULL, CHECK (>= 0) |
-| Availability | ENUM('Available','Unavailable') | NULL |
-| Image | VARCHAR(255) | NULL |
-
-### 📅 Bookings
-
-| Column | Type | Constraints |
-|---|---|---|
-| Booking_ID | INT(11) | PRIMARY KEY, AUTO_INCREMENT |
-| Customer_ID | INT(11) | NULL, FOREIGN KEY |
-| Artist_ID | INT(11) | NULL, FOREIGN KEY |
-| Design_ID | INT(11) | NULL, FOREIGN KEY |
-| Booking_Date | DATE | NOT NULL |
-| Booking_Time | TIME | NOT NULL |
-| Status | ENUM('Pending','Confirmed','Completed','Cancelled') | DEFAULT 'Pending' |
-| Custom_Design_Image | VARCHAR(255) | NULL |
-| Custom_Design_Note | TEXT | NULL |
-| Payment_Option | VARCHAR(20) | NULL |
-
-### 💳 Payments
-
-| Column | Type | Constraints |
-|---|---|---|
-| Payment_ID | INT(11) | PRIMARY KEY, AUTO_INCREMENT |
-| Booking_ID | INT(11) | NULL, FOREIGN KEY |
-| Amount | DECIMAL(10,2) | NULL, CHECK (>= 0) |
-| Payment_Method | ENUM('Bkash','Nagad') | NULL |
-| Payment_Date | DATE | DEFAULT CURRENT_DATE |
-| Payment_Status | ENUM('Paid','Unpaid','Refunded') | DEFAULT 'Unpaid' |
-
-### ⭐ Reviews
-
-| Column | Type | Constraints |
-|---|---|---|
-| Review_ID | INT(11) | PRIMARY KEY, AUTO_INCREMENT |
-| Customer_ID | INT(11) | NULL, FOREIGN KEY |
-| Booking_ID | INT(11) | NULL, FOREIGN KEY |
-| Rating | INT(11) | NULL, CHECK (1–5) |
-| Comment | TEXT | NULL |
-| Review_Date | DATE | DEFAULT CURRENT_DATE |
+| Table | Purpose |
+|---|---|
+| `admin` | Stores administrator login and account recovery information |
+| `artists` | Stores artist profiles, specialization, experience and availability status |
+| `customers` | Stores customer registration and account information |
+| `designs` | Stores henna designs, categories, prices and availability |
+| `bookings` | Stores customer appointments and booking details |
+| `payments` | Stores booking payment transactions and status |
+| `reviews` | Stores customer ratings and feedback |  
 
 ### 🔗 Relationships
 
