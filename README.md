@@ -1,5 +1,4 @@
-# 🌿 Henna Studio
-### Management & Booking System
+## 🌿 Henna Studio Management & Booking System
 
 A web-based DBMS project designed to manage henna studio operations — from customer bookings and design selection to payments, reviews, and administrative management.
 
