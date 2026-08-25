@@ -59,16 +59,35 @@ The system also supports **custom design bookings**, where the design price is d
 
 ## ▶ How to Run
 
-1. Install and open **XAMPP**.
-2. Start **Apache** and **MySQL** from the XAMPP Control Panel.
-3. Place the project folder inside:
-   `C:\xampp\htdocs\`
-4. Open **phpMyAdmin** and create/import the project database.
-5. Open the website in a browser using:
-   `http://localhost/<project-folder>/`
-6. Use the **Admin Login** option to access the administrative panel.
+### Requirements
 
-> The system runs locally through XAMPP and uses PHP with MySQL/MariaDB.
+- XAMPP
+- PHP 8.2 or later
+- MySQL/MariaDB
+- A web browser
+
+### Setup
+
+1. Download or clone the repository and place the project folder inside the XAMPP `htdocs` directory.
+2. Start **Apache** and **MySQL** from the XAMPP Control Panel.
+3. Open **phpMyAdmin** by visiting `http://localhost/phpmyadmin`.
+4. Create a database named:
+   
+   `henna studio management & booking system`
+
+5. Select the database and import the SQL file from the `Database` folder.
+6. Make sure the database connection settings in the PHP configuration file match your local MySQL/MariaDB settings.
+7. Open the project in your browser using: `http://localhost/[project-folder-name]/`
+
+### Demo Login
+
+The SQL file contains sample accounts for demonstration purposes.
+
+The passwords in the public SQL file are replaced with: `[DEMO_PASSWORD]`
+
+After importing the database, replace `[DEMO_PASSWORD]` with your own password for the sample account you want to use.
+
+> **Note:** `[DEMO_PASSWORD]` is only a placeholder and is not a real password.
 
 ## 🗄️ Database Structure
 
